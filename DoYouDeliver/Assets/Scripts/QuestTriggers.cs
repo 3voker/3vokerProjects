@@ -13,7 +13,14 @@ public class QuestTriggers : MonoBehaviour {
     [SerializeField]
     GameObject dropOffPoint;
 
-    public int newLocation;
+    int newLocation;
+    int current;
+    bool hasPizzaOrder = false;
+
+    RectTransform greenArrow;
+    RectTransform redArrow;
+
+
     //[SerializeField]
     //GameObject key;
 
@@ -43,13 +50,13 @@ public class QuestTriggers : MonoBehaviour {
         //key.SetActive(true);
         //mainCamera.enabled = true;
         //cutSceneCamera.enabled = false;
-
+        
         NextMission();
     }
     void Update()
     {
 
-        CheckMission();
+        CheckMission(current);
         //if (anim.GetCurrentAnimatorStateInfo(0).IsName("Done playing"))
         //{
         //    key.SetActive(false);
@@ -64,15 +71,31 @@ public class QuestTriggers : MonoBehaviour {
     {
         if (other.gameObject.tag == "Player")
         {
+
+            //If player touches Homepoint. 
+            //Gets new pizza 
+            //Is assigned next Mission
+            //Homepoint closes(Deactivates)
             if(this.gameObject == homePoint)
-            {
+            {          
+                hasPizzaOrder = true;
                 BossFeedBack();
                 NextMission();
+                homePoint.SetActive(false);
             }
+            //Else If player touches Random Drop Off Point
+            //Loses Pizza 
+            //Customer compliments or complains
+            //Homepoint reopens doors
+            //Return To Homepoint
+            //Destroy this specific drop Off Point
             else if (this.gameObject == dropOffPoint)
             {
+                hasPizzaOrder = false;
                 CustomerFeedBack();
+                homePoint.SetActive(true);
                 ReturnToBase();
+                Destroy(dropOffPoint);
             }
 
             //mainCamera.enabled = false;
@@ -93,7 +116,10 @@ public class QuestTriggers : MonoBehaviour {
 
     private void ReturnToBase()
     {
-        throw new NotImplementedException();
+        //Activate red arrow when returning to base
+        //Arrow should rotate in the direction of the homePoint
+        //Find compass youtube video for help
+      //  redArrow.TransformDirection
     }
 
     private void CustomerFeedBack()
@@ -103,22 +129,40 @@ public class QuestTriggers : MonoBehaviour {
 
     private void NextMission()
     {
-        //Randomizes new location
-        newLocation = UnityEngine.Random.Range(0, locations.Length); 
-        //Location selected   
-        locations[newLocation] = new Vector3 current;
-        
-        Debug.Log("New Location: " + newLocation);   
-    }
-    private void CheckMission(Vector3 current)
-    {
-        if(newLocation == current)
+        if (hasPizzaOrder)
         {
-            NextMission();
-            Instantiate(dropOffPoint, current, Quaternion.identity);
-            
+            //Randomizes new location
+            newLocation = UnityEngine.Random.Range(0, locations.Length);
+            //Location selected   
+            Debug.Log("New Location: " + newLocation);
+            newLocation = current;
         }
-     
+    }
+    private void CheckMission(int current)
+    {
+        if(newLocation == current && hasPizzaOrder)
+        {
+            foreach (Vector3 location in locations)
+            {
+                if(newLocation != current && hasPizzaOrder)
+                {
+                    //Activate green arrow when going to new Location
+                    //Arrow should rotate in the direction of the drop Off Point
+                    //Find compass youtube video for help
+                    Instantiate(dropOffPoint, location, Quaternion.identity);
+                    break;
+                }
+                else if(newLocation != current && hasPizzaOrder == false)
+                {
+                    ReturnToBase();
+                }
+            }
+            NextMission();                     
+        }
+     else if(newLocation == current && hasPizzaOrder == false)
+        {
+            ReturnToBase();
+        }
     }
     /*  EnemySpawn()
  {

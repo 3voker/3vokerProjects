@@ -92,7 +92,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             RaycastHit hit;
             Vector3 endPoint = transform.position + maxDistanceToActivateObjects * transform.forward;
-            Ray ray = cam.ScreenPointToRay(new Vector3 (transform.position.x, camTransform.position.y, maxDistanceToActivateObjects));
+            Ray ray = cam.ScreenPointToRay(new Vector3 (250, 250, 0));
                
 
             if (Physics.Raycast(ray, out hit))

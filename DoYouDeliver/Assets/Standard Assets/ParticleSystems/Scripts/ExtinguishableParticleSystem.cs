@@ -1,28 +1,24 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 
-namespace UnityStandardAssets.Effects
+namespace UnitySampleAssets.Effects
 {
     public class ExtinguishableParticleSystem : MonoBehaviour
     {
+
         public float multiplier = 1;
-
-        private ParticleSystem[] m_Systems;
-
+        private ParticleSystem[] systems;
 
         private void Start()
         {
-            m_Systems = GetComponentsInChildren<ParticleSystem>();
+            systems = GetComponentsInChildren<ParticleSystem>();
         }
-
 
         public void Extinguish()
         {
-            foreach (var system in m_Systems)
+            foreach (var system in systems)
             {
-                var emission = system.emission;
-                emission.enabled = false;
+                system.enableEmission = false;
             }
         }
     }

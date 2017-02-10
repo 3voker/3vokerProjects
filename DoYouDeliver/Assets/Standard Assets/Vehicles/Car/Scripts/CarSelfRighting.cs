@@ -1,38 +1,29 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace UnityStandardAssets.Vehicles.Car
+namespace UnitySampleAssets.Vehicles.Car
 {
     public class CarSelfRighting : MonoBehaviour
     {
+
         // Automatically put the car the right way up, if it has come to rest upside-down.
-        [SerializeField] private float m_WaitTime = 3f;           // time to wait before self righting
-        [SerializeField] private float m_VelocityThreshold = 1f;  // the velocity below which the car is considered stationary for self-righting
+        [SerializeField] private float waitTime = 3f; // time to wait before self righting
+        [SerializeField] private float velocityThreshold = 1f;// the velocity below which the car is considered stationary for self-righting
 
-        private float m_LastOkTime; // the last time that the car was in an OK state
-        private Rigidbody m_Rigidbody;
-
-
-        private void Start()
-        {
-            m_Rigidbody = GetComponent<Rigidbody>();
-        }
-
+        private float lastOkTime; // the last time that the car was in an OK state
 
         private void Update()
         {
             // is the car is the right way up
-            if (transform.up.y > 0f || m_Rigidbody.velocity.magnitude > m_VelocityThreshold)
+            if (transform.up.y > 0f || GetComponent<Rigidbody>().velocity.magnitude > velocityThreshold)
             {
-                m_LastOkTime = Time.time;
+                lastOkTime = Time.time;
             }
 
-            if (Time.time > m_LastOkTime + m_WaitTime)
+            if (Time.time > lastOkTime + waitTime)
             {
                 RightCar();
             }
         }
-
 
         // put the car back the right way up:
         private void RightCar()

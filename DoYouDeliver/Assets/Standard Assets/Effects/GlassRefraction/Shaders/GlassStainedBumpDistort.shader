@@ -19,13 +19,13 @@ Category {
 
 		// This pass grabs the screen behind the object into a texture.
 		// We can access the result in the next pass as _GrabTexture
-		GrabPass {
+		GrabPass {							
 			Name "BASE"
 			Tags { "LightMode" = "Always" }
-		}
-		
-		// Main pass: Take the texture grabbed above and use the bumpmap to perturb it
-		// on to the screen
+ 		}
+ 		
+ 		// Main pass: Take the texture grabbed above and use the bumpmap to perturb it
+ 		// on to the screen
 		Pass {
 			Name "BASE"
 			Tags { "LightMode" = "Always" }
@@ -33,7 +33,7 @@ Category {
 CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
-#pragma multi_compile_fog
+#pragma fragmentoption ARB_precision_hint_fastest
 #include "UnityCG.cginc"
 
 struct appdata_t {
@@ -42,11 +42,10 @@ struct appdata_t {
 };
 
 struct v2f {
-	float4 vertex : SV_POSITION;
+	float4 vertex : POSITION;
 	float4 uvgrab : TEXCOORD0;
 	float2 uvbump : TEXCOORD1;
 	float2 uvmain : TEXCOORD2;
-	UNITY_FOG_COORDS(3)
 };
 
 float _BumpAmt;
@@ -66,7 +65,6 @@ v2f vert (appdata_t v)
 	o.uvgrab.zw = o.vertex.zw;
 	o.uvbump = TRANSFORM_TEX( v.texcoord, _BumpMap );
 	o.uvmain = TRANSFORM_TEX( v.texcoord, _MainTex );
-	UNITY_TRANSFER_FOG(o,o.vertex);
 	return o;
 }
 
@@ -75,7 +73,7 @@ float4 _GrabTexture_TexelSize;
 sampler2D _BumpMap;
 sampler2D _MainTex;
 
-half4 frag (v2f i) : SV_Target
+half4 frag( v2f i ) : COLOR
 {
 	// calculate perturbed coordinates
 	half2 bump = UnpackNormal(tex2D( _BumpMap, i.uvbump )).rg; // we could optimize this by just reading the x & y without reconstructing the Z
@@ -83,10 +81,8 @@ half4 frag (v2f i) : SV_Target
 	i.uvgrab.xy = offset * i.uvgrab.z + i.uvgrab.xy;
 	
 	half4 col = tex2Dproj( _GrabTexture, UNITY_PROJ_COORD(i.uvgrab));
-	half4 tint = tex2D(_MainTex, i.uvmain);
-	col *= tint;
-	UNITY_APPLY_FOG(i.fogCoord, col);
-	return col;
+	half4 tint = tex2D( _MainTex, i.uvmain );
+	return col * tint;
 }
 ENDCG
 		}
@@ -94,7 +90,7 @@ ENDCG
 
 	// ------------------------------------------------------------------
 	// Fallback for older cards and Unity non-Pro
-
+	
 	SubShader {
 		Blend DstColor Zero
 		Pass {

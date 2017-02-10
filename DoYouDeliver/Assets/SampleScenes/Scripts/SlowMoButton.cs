@@ -1,46 +1,66 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace UnityStandardAssets.SceneUtils
+namespace UnitySampleAssets.SceneUtils
 {
     public class SlowMoButton : MonoBehaviour
     {
-        public Sprite FullSpeedTex;     // the ui texture for full speed
-        public Sprite SlowSpeedTex;     // the ui texture for slow motion mode
+
+        public Sprite FullSpeedTex; // the gui texture for full speed
+        public Sprite SlowSpeedTex; // the gui texture for slow motion mode
         public float fullSpeed = 1;
         public float slowSpeed = 0.3f;
-        public Button button;           // reference to the ui texture that will be changed
+        public Button button; // reference to the gui texture that will be changed
+        public bool alsoScalePhysicsTimestep = true;
+        private bool slowMo;
+        private float targetTime;
+        private float lastRealTime;
+        private float fixedTimeRatio;
 
-
-        private bool m_SlowMo;
-
-
-       	void Start()
+        private void Start()
         {
-			m_SlowMo = false;
+            targetTime = fullSpeed;
+            lastRealTime = Time.realtimeSinceStartup;
+            fixedTimeRatio = Time.fixedDeltaTime/Time.timeScale;
         }
 
-		void OnDestroy()
-		{
-			Time.timeScale = 1;
-		}
+        private void Update()
+        {
+            float realDeltaTime = Time.realtimeSinceStartup - lastRealTime;
+
+            if (Time.timeScale != targetTime)
+            {
+                // lerp towards target time
+                Time.timeScale = Mathf.Lerp(Time.timeScale, targetTime, realDeltaTime*2);
+                if (alsoScalePhysicsTimestep)
+                {
+                    Time.fixedDeltaTime = fixedTimeRatio*Time.timeScale;
+                }
+                // snap if close enough:
+                if (Mathf.Abs(Time.timeScale - targetTime) < 0.01f)
+                {
+                    Time.timeScale = targetTime;
+                }
+            }
+            lastRealTime = Time.realtimeSinceStartup;
+        }
 
         public void ChangeSpeed()
         {
             // toggle slow motion state
-            m_SlowMo = !m_SlowMo;
+            slowMo = !slowMo;
 
             // update button texture
             var image = button.targetGraphic as Image;
             if (image != null)
-            {
-                image.sprite = m_SlowMo ? SlowSpeedTex : FullSpeedTex;
-            }
+                image.sprite = slowMo ? SlowSpeedTex : FullSpeedTex;
 
             button.targetGraphic = image;
 
-			Time.timeScale = m_SlowMo ? slowSpeed : fullSpeed;
+            targetTime = slowMo ? slowSpeed : fullSpeed;
         }
     }
 }
+
+
+

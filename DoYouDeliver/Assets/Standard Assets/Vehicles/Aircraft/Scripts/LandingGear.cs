@@ -1,16 +1,10 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace UnityStandardAssets.Vehicles.Aeroplane
+namespace UnitySampleAssets.Vehicles.Aeroplane
 {
+
     public class LandingGear : MonoBehaviour
     {
-
-        private enum GearState
-        {
-            Raised = -1,
-            Lowered = 1
-        }
 
         // The landing gear can be raised and lowered at differing altitudes.
         // The gear is only lowered when descending, and only raised when climbing.
@@ -21,35 +15,41 @@ namespace UnityStandardAssets.Vehicles.Aeroplane
         public float raiseAtAltitude = 40;
         public float lowerAtAltitude = 40;
 
-        private GearState m_State = GearState.Lowered;
-        private Animator m_Animator;
-        private Rigidbody m_Rigidbody;
-        private AeroplaneController m_Plane;
+        private GearState state = GearState.Lowered;
+        private Animator animator;
+
+        private enum GearState
+        {
+            Raised = -1,
+            Lowered = 1
+        }
+
+        private AeroplaneController plane;
 
         // Use this for initialization
         private void Start()
         {
-            m_Plane = GetComponent<AeroplaneController>();
-            m_Animator = GetComponent<Animator>();
-            m_Rigidbody = GetComponent<Rigidbody>();
+            plane = GetComponent<AeroplaneController>();
+            animator = GetComponent<Animator>();
         }
-
 
         // Update is called once per frame
         private void Update()
         {
-            if (m_State == GearState.Lowered && m_Plane.Altitude > raiseAtAltitude && m_Rigidbody.velocity.y > 0)
+
+            if (state == GearState.Lowered && plane.Altitude > raiseAtAltitude && GetComponent<Rigidbody>().velocity.y > 0)
             {
-                m_State = GearState.Raised;
+                state = GearState.Raised;
             }
 
-            if (m_State == GearState.Raised && m_Plane.Altitude < lowerAtAltitude && m_Rigidbody.velocity.y < 0)
+            if (state == GearState.Raised && plane.Altitude < lowerAtAltitude && GetComponent<Rigidbody>().velocity.y < 0)
             {
-                m_State = GearState.Lowered;
+                state = GearState.Lowered;
             }
 
             // set the parameter on the animator controller to trigger the appropriate animation
-            m_Animator.SetInteger("GearState", (int) m_State);
+            animator.SetInteger("GearState", (int) state);
+
         }
     }
 }

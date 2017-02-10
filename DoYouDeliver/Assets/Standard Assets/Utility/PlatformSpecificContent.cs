@@ -1,12 +1,10 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
+
+namespace UnitySampleAssets.Utility
+{
+
 #if UNITY_EDITOR
 using UnityEditor;
-#endif
-
-namespace UnityStandardAssets.Utility
-{
-#if UNITY_EDITOR
 
     [ExecuteInEditMode]
 #endif
@@ -18,10 +16,9 @@ namespace UnityStandardAssets.Utility
             Mobile
         }
 
-        [SerializeField] private BuildTargetGroup m_BuildTargetGroup;
-        [SerializeField] private GameObject[] m_Content = new GameObject[0];
-        [SerializeField] private MonoBehaviour[] m_MonoBehaviours = new MonoBehaviour[0];
-        [SerializeField] private bool m_ChildrenOfThisObject;
+        [SerializeField] private BuildTargetGroup showOnlyOn;
+        [SerializeField] private GameObject[] content = new GameObject[0];
+        [SerializeField] private bool childrenOfThisObject;
 
 #if !UNITY_EDITOR
 	void OnEnable()
@@ -38,25 +35,23 @@ namespace UnityStandardAssets.Utility
             EditorApplication.update += Update;
         }
 
-
         private void OnDisable()
         {
             EditorUserBuildSettings.activeBuildTargetChanged -= Update;
             EditorApplication.update -= Update;
         }
 
-
         private void Update()
         {
             CheckEnableContent();
+
         }
 #endif
-
 
         private void CheckEnableContent()
         {
 #if (UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_BLACKBERRY )
-		if (m_BuildTargetGroup == BuildTargetGroup.Mobile)
+		if (showOnlyOn == BuildTargetGroup.Mobile)
 		{
 			EnableContent(true);
 		} else {
@@ -65,7 +60,7 @@ namespace UnityStandardAssets.Utility
 #endif
 
 #if !(UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_BLACKBERRY )
-            if (m_BuildTargetGroup == BuildTargetGroup.Mobile)
+            if (showOnlyOn == BuildTargetGroup.Mobile)
             {
                 EnableContent(false);
             }
@@ -74,14 +69,14 @@ namespace UnityStandardAssets.Utility
                 EnableContent(true);
             }
 #endif
-        }
 
+        }
 
         private void EnableContent(bool enabled)
         {
-            if (m_Content.Length > 0)
+            if (content.Length > 0)
             {
-                foreach (var g in m_Content)
+                foreach (var g in content)
                 {
                     if (g != null)
                     {
@@ -89,20 +84,15 @@ namespace UnityStandardAssets.Utility
                     }
                 }
             }
-            if (m_ChildrenOfThisObject)
+            if (childrenOfThisObject)
             {
                 foreach (Transform t in transform)
                 {
                     t.gameObject.SetActive(enabled);
                 }
             }
-            if (m_MonoBehaviours.Length > 0)
-            {
-                foreach (var monoBehaviour in m_MonoBehaviours)
-                {
-                    monoBehaviour.enabled = enabled;
-                }
-            }
         }
     }
 }
+
+

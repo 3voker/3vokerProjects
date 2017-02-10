@@ -3,7 +3,7 @@ Particle System Sample Assets.
 We've selected a few sample effects to show a variety of ways our particle system technology can be used. Some use the particle system component alone, and some are augmented using other components. We've provided a sandbox demo scene which allows you to spawn particles and interact with the scene. Here are notes about each system included in the demo scene.
 
 Explosion. 
-A powerful effect which uses sub emitters to leave streaks of smoke arcing out from the central effect. Also makes use of a script which applies physics force to objects within a radius.
+A powerful effect which uses sub emitters to leave streaks of smoke arcing out from the central effect. Also makes use of sound and a script which applies physics force to objects within a radius.
 
 FireComplex
 Uses a combination of many particles, including spritesheet animation, sparks and smoke. This effect also has a Light GameObject, whose position is animated by a script so that the lighting in the scene appears to flicker around as the effect plays.

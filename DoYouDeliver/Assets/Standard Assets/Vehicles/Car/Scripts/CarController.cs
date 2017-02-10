@@ -1,367 +1,400 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace UnityStandardAssets.Vehicles.Car
+namespace UnitySampleAssets.Vehicles.Car
 {
-    internal enum CarDriveType
-    {
-        FrontWheelDrive,
-        RearWheelDrive,
-        FourWheelDrive
-    }
-
-    internal enum SpeedType
-    {
-        MPH,
-        KPH
-    }
-
     public class CarController : MonoBehaviour
     {
-        [SerializeField] private CarDriveType m_CarDriveType = CarDriveType.FourWheelDrive;
-        [SerializeField] private WheelCollider[] m_WheelColliders = new WheelCollider[4];
-        [SerializeField] private GameObject[] m_WheelMeshes = new GameObject[4];
-        [SerializeField] private WheelEffects[] m_WheelEffects = new WheelEffects[4];
-        [SerializeField] private Vector3 m_CentreOfMassOffset;
-        [SerializeField] private float m_MaximumSteerAngle;
-        [Range(0, 1)] [SerializeField] private float m_SteerHelper; // 0 is raw physics , 1 the car will grip in the direction it is facing
-        [Range(0, 1)] [SerializeField] private float m_TractionControl; // 0 is no traction control, 1 is full interference
-        [SerializeField] private float m_FullTorqueOverAllWheels;
-        [SerializeField] private float m_ReverseTorque;
-        [SerializeField] private float m_MaxHandbrakeTorque;
-        [SerializeField] private float m_Downforce = 100f;
-        [SerializeField] private SpeedType m_SpeedType;
-        [SerializeField] private float m_Topspeed = 200;
-        [SerializeField] private static int NoOfGears = 5;
-        [SerializeField] private float m_RevRangeBoundary = 1f;
-        [SerializeField] private float m_SlipLimit;
-        [SerializeField] private float m_BrakeTorque;
 
-        private Quaternion[] m_WheelMeshLocalRotations;
-        private Vector3 m_Prevpos, m_Pos;
-        private float m_SteerAngle;
-        private int m_GearNum;
-        private float m_GearFactor;
-        private float m_OldRotation;
-        private float m_CurrentTorque;
-        private Rigidbody m_Rigidbody;
-        private const float k_ReversingThreshold = 0.01f;
+        // This car component is designed to be used on a gameobject which has wheels attached.
+        // The wheels must be child objects, and each have a Wheel script attached, and a WheelCollider component.
 
-        public bool Skidding { get; private set; }
-        public float BrakeInput { get; private set; }
-        public float CurrentSteerAngle{ get { return m_SteerAngle; }}
-        public float CurrentSpeed{ get { return m_Rigidbody.velocity.magnitude*2.23693629f; }}
-        public float MaxSpeed{get { return m_Topspeed; }}
-        public float Revs { get; private set; }
-        public float AccelInput { get; private set; }
+        // Even though wheelcolliders have their own settings for grip loss, this car script (and its accompanying
+        // wheel scripts) modify the settings on the wheelcolliders at runtime, to give a more exaggerated and fun
+        // experience, allowing burnouts and drifting behavior in a way that is not readily achievable using
+        // constant values on wheelcolliders alone.
 
-        // Use this for initialization
-        private void Start()
+        // The code priorities fun over realism, and although a gears system is included, it is not used to 
+        // 'drive' the engine. Instead, the current revs and gear are calculated retrospectively based
+        // on the car's current speed. These gear and rev values can then be read and used by a GUI or Sound component.
+
+
+        [SerializeField] private float maxSteerAngle = 28; // The maximum angle the car can steer
+        [SerializeField] private float steeringResponseSpeed = 200; // how fast the steering responds
+        [SerializeField] [Range(0, 1)] private float maxSpeedSteerAngle = 0.23f;// the reduction in steering angle at max speed
+        [SerializeField] [Range(0, .5f)] private float maxSpeedSteerResponse = 0.5f;// the reduction in steer response at max speed
+        [SerializeField] private float maxSpeed = 60; // the maximum speed (in meters per second!)
+        [SerializeField] private float maxTorque = 35; // the maximum torque of the engine
+        [SerializeField] private float minTorque = 10; // the minimum torque of the engine
+        [SerializeField] private float brakePower = 40; // how powerful the brakes are at stopping the car
+        [SerializeField] private float adjustCentreOfMass = 0.25f; // vertical offset for the centre of mass
+        [SerializeField] private Advanced advanced;// container for the advanced setting which will expose as a foldout in the inspector
+        [SerializeField] private bool preserveDirectionWhileInAir = false;// flag for if the direction of travel to be preserved in the air (helps cars land in the right direction if doing huge jumps!)
+
+        [System.Serializable]
+        public class Advanced // the advanced settings for the car controller
         {
-            m_WheelMeshLocalRotations = new Quaternion[4];
-            for (int i = 0; i < 4; i++)
-            {
-                m_WheelMeshLocalRotations[i] = m_WheelMeshes[i].transform.localRotation;
-            }
-            m_WheelColliders[0].attachedRigidbody.centerOfMass = m_CentreOfMassOffset;
-
-            m_MaxHandbrakeTorque = float.MaxValue;
-
-            m_Rigidbody = GetComponent<Rigidbody>();
-            m_CurrentTorque = m_FullTorqueOverAllWheels - (m_TractionControl*m_FullTorqueOverAllWheels);
+            [Range(0, 1)] public float burnoutSlipEffect = 0.4f; // how much the car wheels will slide when burning out
+            [Range(0, 1)] public float burnoutTendency = 0.2f; // how likely the car is to burnout 
+            [Range(0, 1)] public float spinoutSlipEffect = 0.5f; // how easily the car spins out when turning
+            [Range(0, 1)] public float sideSlideEffect = 0.5f; // how easily the car loses sideways grip 
+            public float downForce = 30; // the amount of downforce applied (speed is factored in)
+            public int numGears = 5; // the number of gears
+            [Range(0, 1)] public float gearDistributionBias = 0.2f;// Controls whether the gears are bunched together towards the lower or higher end of the car's range of speed.
+            public float steeringCorrection = 2f; // How fast the steering returns to centre with no steering input
+            public float oppositeLockSteeringCorrection = 4f;// How fast the steering responds when steer input is in the opposite direction to the current wheel angle
+            public float reversingSpeedFactor = 0.3f;// The car's maximum reverse speed, as a proportion of its max forward speed.
+            public float skidGearLockFactor = 0.1f;// The car will not automatically change gear if the current skid factor is higher than this value.
+            public float accelChangeSmoothing = 2f; // Used to smooth out changes in acceleration input.
+            public float gearFactorSmoothing = 5f;// Controls the speed at which revs drop or raise to match new gear, after a gear change.
+            [Range(0, 1)] public float revRangeBoundary = 0.8f; // The amount of the full rev range used in each gear.
         }
 
 
-        private void GearChanging()
+        private float[] gearDistribution;// Stores the caluclated change point for each gear (0-1 as a normalised amount relative to car's max speed)
+        private Wheel[] wheels; // Stores a reference to each wheel attached to this car.
+        private float accelBrake; // The acceleration or braking input (1 to -1 range)
+        private float smallSpeed;// A small proportion of max speed, used to decide when to start accelerating/braking when transitioning between fwd and reverse motion
+        private float maxReversingSpeed; // The maximum reversing speed
+        private bool immobilized; // Whether the car is accepting inputs.
+
+
+        // publicly read-only props, useful for GUI, Sound effects, etc.
+        public int GearNum { get; private set; } // the current gear we're in.
+        public float CurrentSpeed { get; private set; } // the current speed of the car
+        public float CurrentSteerAngle { get; private set; } // The current steering angle for steerable wheels.
+        public float AccelInput { get; private set; } // the current acceleration input
+        public float BrakeInput { get; private set; } // the current brake input
+        public float GearFactor { get; private set; }// value between 0-1 indicating where the current revs fall within the current range of revs for this gear
+        public float AvgPowerWheelRpmFactor { get; private set; } // the average RPM of all wheels marked as 'powered'
+        public float AvgSkid { get; private set; } // the average skid factor from all wheels
+        public float RevsFactor { get; private set; }// value between 0-1 indicating where the current revs fall between 0 and max revs
+        public float SpeedFactor { get; private set; }// value between 0-1 of the car's current speed relative to max speed
+
+        public int NumGears
         {
-            float f = Mathf.Abs(CurrentSpeed/MaxSpeed);
-            float upgearlimit = (1/(float) NoOfGears)*(m_GearNum + 1);
-            float downgearlimit = (1/(float) NoOfGears)*m_GearNum;
+            // the number of gears set up on the car
+            get { return advanced.numGears; }
+        }
 
-            if (m_GearNum > 0 && f < downgearlimit)
+
+        // the following values are provided as read-only properties,
+        // and are required by the Wheel script to compute grip, burnout, skidding, etc
+        public float MaxSpeed
+        {
+            get { return maxSpeed; }
+        }
+
+
+        public float MaxTorque
+        {
+            get { return maxTorque; }
+        }
+
+
+        public float BurnoutSlipEffect
+        {
+            get { return advanced.burnoutSlipEffect; }
+        }
+
+
+        public float BurnoutTendency
+        {
+            get { return advanced.burnoutTendency; }
+        }
+
+
+        public float SpinoutSlipEffect
+        {
+            get { return advanced.spinoutSlipEffect; }
+        }
+
+
+        public float SideSlideEffect
+        {
+            get { return advanced.sideSlideEffect; }
+        }
+
+
+        public float MaxSteerAngle
+        {
+            get { return maxSteerAngle; }
+        }
+
+
+        // variables added due to separating out things into functions!
+        private bool anyOnGround;
+        private float curvedSpeedFactor;
+        private bool reversing;
+        private float targetAccelInput;// target accel input is our desired acceleration input. We smooth towards it later
+
+        private void Awake()
+        {
+            // get a reference to all wheel attached to the car.
+            wheels = GetComponentsInChildren<Wheel>();
+
+            SetUpGears();
+
+            // deactivate and reactivate the gameobject - this is a workaround
+            // to a bug where changes to wheelcolliders at runtime are not 'taken'
+            // by the rigidbody unless this step is performed :(
+            gameObject.SetActive(false);
+            gameObject.SetActive(true);
+
+            // a few useful speeds are calculated for use later:
+            smallSpeed = maxSpeed*0.05f;
+            maxReversingSpeed = maxSpeed*advanced.reversingSpeedFactor;
+        }
+
+
+        private void OnEnable()
+        {
+            // set adjusted centre of mass.
+            GetComponent<Rigidbody>().centerOfMass = Vector3.up*adjustCentreOfMass;
+        }
+
+
+        public void Move(float steerInput, float accelBrakeInput)
+        {
+
+            // lose control of engine if immobilized
+            if (immobilized) accelBrakeInput = 0;
+
+            ConvertInputToAccelerationAndBraking(accelBrakeInput);
+            CalculateSpeedValues();
+            HandleGearChanging();
+            CalculateGearFactor();
+            ProcessWheels(steerInput);
+            ApplyDownforce();
+            CalculateRevs();
+            PreserveDirectionInAir();
+
+        }
+
+        private void ConvertInputToAccelerationAndBraking(float accelBrakeInput)
+        {
+            // move.Z is the user's fwd/back input. We need to convert it into acceleration and braking.
+            // this differs based on if the car is currently moving forward or backward.
+            // change is based slightly away from the zero value (by "smallspeed") so that for example when
+            // the car transitions from reversing to moving forwards, the car does not need to come to a complete
+            // rest before starting to accelerate.
+
+            reversing = false;
+            if (accelBrakeInput > 0)
             {
-                m_GearNum--;
+                if (CurrentSpeed > -smallSpeed)
+                {
+                    // pressing forward while moving forward : accelerate!
+                    targetAccelInput = accelBrakeInput;
+                    BrakeInput = 0;
+                }
+                else
+                {
+                    // pressing forward while movnig backward : brake!
+                    BrakeInput = accelBrakeInput;
+                    targetAccelInput = 0;
+                }
             }
-
-            if (f > upgearlimit && (m_GearNum < (NoOfGears - 1)))
+            else
             {
-                m_GearNum++;
+                if (CurrentSpeed > smallSpeed)
+                {
+                    // pressing backward while moving forward : brake!
+                    BrakeInput = -accelBrakeInput;
+                    targetAccelInput = 0;
+                }
+                else
+                {
+                    // pressing backward while moving backward : accelerate (in reverse direction)
+                    BrakeInput = 0;
+                    targetAccelInput = accelBrakeInput;
+                    reversing = true;
+                }
+            }
+            // smoothly move the current accel towards the target accel value.
+            AccelInput = Mathf.MoveTowards(AccelInput, targetAccelInput, Time.deltaTime*advanced.accelChangeSmoothing);
+        }
+
+        private void CalculateSpeedValues()
+        {
+            // current speed is measured in the forward direction of the car (sliding sideways doesn't count!)
+            CurrentSpeed = transform.InverseTransformDirection(GetComponent<Rigidbody>().velocity).z;
+            // speedfactor is a normalized representation of speed in relation to max speed:
+            SpeedFactor = Mathf.InverseLerp(0, reversing ? maxReversingSpeed : maxSpeed, Mathf.Abs(CurrentSpeed));
+            curvedSpeedFactor = reversing ? 0 : CurveFactor(SpeedFactor);
+        }
+
+        private void HandleGearChanging()
+        {
+            // change gear, when appropriate (if speed has risen above or below the current gear's range, as stored in the gearDistribution array)
+            if (!reversing)
+            {
+                if (SpeedFactor < gearDistribution[GearNum] && GearNum > 0)
+                    GearNum--;
+                if (SpeedFactor > gearDistribution[GearNum + 1] && AvgSkid < advanced.skidGearLockFactor &&
+                    GearNum < advanced.numGears - 1)
+                    GearNum++;
             }
         }
 
+        private void CalculateGearFactor()
+        {
+            // gear factor is a normalised representation of the current speed within the current gear's range of speeds.
+            // We smooth towards the 'target' gear factor, so that revs don't instantly snap up or down when changing gear.
+            var targetGearFactor = Mathf.InverseLerp(gearDistribution[GearNum], gearDistribution[GearNum + 1],
+                                                     Mathf.Abs(AvgPowerWheelRpmFactor));
+            GearFactor = Mathf.Lerp(GearFactor, targetGearFactor, Time.deltaTime*advanced.gearFactorSmoothing);
+        }
+
+        private void ProcessWheels(float steerInput)
+        {
+            // Process each wheel:
+            // we accumulate some averages of all wheels into these vars:
+            AvgPowerWheelRpmFactor = 0;
+            AvgSkid = 0;
+            var numPowerWheels = 0;
+            anyOnGround = false;
+            foreach (var wheel in wheels)
+            {
+                var wheelCollider = wheel.wheelCollider;
+                if (wheel.steerable)
+                {
+                    // apply steering to this wheel. The actual steering change applied is based on the steering range, current speed, 
+                    // and whether the wheel is currently pointing in the direction that steering is being applied
+                    var currentSteerSpeed = Mathf.Lerp(steeringResponseSpeed,
+                                                       steeringResponseSpeed*maxSpeedSteerResponse, curvedSpeedFactor);
+                    var currentMaxAngle = Mathf.Lerp(maxSteerAngle, maxSteerAngle*maxSpeedSteerAngle, curvedSpeedFactor);
+                    // auto-correct steering to centre if no steering input:
+                    if (steerInput == 0)
+                    {
+                        currentSteerSpeed *= advanced.steeringCorrection;
+                    }
+                    // increase steering speed if steering input is in opposite direction to current wheel direction (for faster response)
+                    if (Mathf.Sign(steerInput) != Mathf.Sign(CurrentSteerAngle))
+                    {
+                        currentSteerSpeed *= advanced.oppositeLockSteeringCorrection;
+                    }
+                    // modify the actual steer angle of the wheel by these calculated values:
+                    CurrentSteerAngle = Mathf.MoveTowards(CurrentSteerAngle, steerInput*currentMaxAngle,
+                                                          Time.deltaTime*currentSteerSpeed);
+                    wheelCollider.steerAngle = CurrentSteerAngle;
+                }
+                // acumulate skid amount from this wheel, for averaging later
+                AvgSkid += wheel.SkidFactor;
+                if (wheel.powered)
+                {
+                    // apply power to wheels marked as powered:
+                    // available torque drops off as we approach max speed
+                    var currentMaxTorque = Mathf.Lerp(maxTorque, (SpeedFactor < 1) ? minTorque : 0,
+                                                      reversing ? SpeedFactor : curvedSpeedFactor);
+                    wheelCollider.motorTorque = AccelInput*currentMaxTorque;
+                    // accumulate RPM from this wheel, for averaging later
+                    AvgPowerWheelRpmFactor += wheel.Rpm/wheel.MaxRpm;
+                    numPowerWheels++;
+                }
+                // apply curent brake torque to wheel
+                wheelCollider.brakeTorque = BrakeInput*brakePower;
+                // if any wheel is on the ground, the car is considered grounded
+                if (wheel.OnGround)
+                {
+                    anyOnGround = true;
+                }
+            }
+            // average the accumulated wheel values
+            AvgPowerWheelRpmFactor /= numPowerWheels;
+            AvgSkid /= wheels.Length;
+        }
+
+        private void ApplyDownforce()
+        {
+            // apply downforce
+            if (anyOnGround)
+            {
+                GetComponent<Rigidbody>().AddForce(-transform.up*curvedSpeedFactor*advanced.downForce);
+            }
+        }
+
+        private void CalculateRevs()
+        {
+            // calculate engine revs (for display / sound)
+            // (this is done in retrospect - revs are not used in force/power calculations)
+            var gearNumFactor = GearNum/(float) NumGears;
+            var revsRangeMin = ULerp(0f, advanced.revRangeBoundary, CurveFactor(gearNumFactor));
+            var revsRangeMax = ULerp(advanced.revRangeBoundary, 1f, gearNumFactor);
+            RevsFactor = ULerp(revsRangeMin, revsRangeMax, GearFactor);
+        }
+
+        private void PreserveDirectionInAir()
+        {
+            // special feature which allows cars to remain roughly pointing in the direction of travel
+            if (!anyOnGround && preserveDirectionWhileInAir && GetComponent<Rigidbody>().velocity.magnitude > smallSpeed)
+            {
+                GetComponent<Rigidbody>().MoveRotation(Quaternion.Slerp(GetComponent<Rigidbody>().rotation, Quaternion.LookRotation(GetComponent<Rigidbody>().velocity),
+                                                        Time.deltaTime));
+                GetComponent<Rigidbody>().angularVelocity = Vector3.Lerp(GetComponent<Rigidbody>().angularVelocity, Vector3.zero, Time.deltaTime);
+            }
+        }
 
         // simple function to add a curved bias towards 1 for a value in the 0-1 range
-        private static float CurveFactor(float factor)
+        private float CurveFactor(float factor)
         {
             return 1 - (1 - factor)*(1 - factor);
         }
 
 
         // unclamped version of Lerp, to allow value to exceed the from-to range
-        private static float ULerp(float from, float to, float value)
+        private float ULerp(float from, float to, float value)
         {
             return (1.0f - value)*from + value*to;
         }
 
 
-        private void CalculateGearFactor()
+        private void SetUpGears()
         {
-            float f = (1/(float) NoOfGears);
-            // gear factor is a normalised representation of the current speed within the current gear's range of speeds.
-            // We smooth towards the 'target' gear factor, so that revs don't instantly snap up or down when changing gear.
-            var targetGearFactor = Mathf.InverseLerp(f*m_GearNum, f*(m_GearNum + 1), Mathf.Abs(CurrentSpeed/MaxSpeed));
-            m_GearFactor = Mathf.Lerp(m_GearFactor, targetGearFactor, Time.deltaTime*5f);
-        }
+            // the gear distribution is a range of normalized values marking out where the gear changes should occur
+            // over the normalized range of speeds for the car.
+            // eg, if the bias is centred, 5 gears would be evenly distributed as 0-0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, 0.8-1
+            // with a low bias, the gears are clumped towards the lower end of the speed range, and vice-versa for high bias.
 
-
-        private void CalculateRevs()
-        {
-            // calculate engine revs (for display / sound)
-            // (this is done in retrospect - revs are not used in force/power calculations)
-            CalculateGearFactor();
-            var gearNumFactor = m_GearNum/(float) NoOfGears;
-            var revsRangeMin = ULerp(0f, m_RevRangeBoundary, CurveFactor(gearNumFactor));
-            var revsRangeMax = ULerp(m_RevRangeBoundary, 1f, gearNumFactor);
-            Revs = ULerp(revsRangeMin, revsRangeMax, m_GearFactor);
-        }
-
-
-        public void Move(float steering, float accel, float footbrake, float handbrake)
-        {
-            for (int i = 0; i < 4; i++)
+            gearDistribution = new float[advanced.numGears + 1];
+            for (int g = 0; g <= advanced.numGears; ++g)
             {
-                Quaternion quat;
-                Vector3 position;
-                m_WheelColliders[i].GetWorldPose(out position, out quat);
-                m_WheelMeshes[i].transform.position = position;
-                m_WheelMeshes[i].transform.rotation = quat;
-            }
+                float gearPos = g/(float) advanced.numGears;
 
-            //clamp input values
-            steering = Mathf.Clamp(steering, -1, 1);
-            AccelInput = accel = Mathf.Clamp(accel, 0, 1);
-            BrakeInput = footbrake = -1*Mathf.Clamp(footbrake, -1, 0);
-            handbrake = Mathf.Clamp(handbrake, 0, 1);
+                float lowBias = gearPos*gearPos*gearPos;
+                float highBias = 1 - (1 - gearPos)*(1 - gearPos)*(1 - gearPos);
 
-            //Set the steer on the front wheels.
-            //Assuming that wheels 0 and 1 are the front wheels.
-            m_SteerAngle = steering*m_MaximumSteerAngle;
-            m_WheelColliders[0].steerAngle = m_SteerAngle;
-            m_WheelColliders[1].steerAngle = m_SteerAngle;
-
-            SteerHelper();
-            ApplyDrive(accel, footbrake);
-            CapSpeed();
-
-            //Set the handbrake.
-            //Assuming that wheels 2 and 3 are the rear wheels.
-            if (handbrake > 0f)
-            {
-                var hbTorque = handbrake*m_MaxHandbrakeTorque;
-                m_WheelColliders[2].brakeTorque = hbTorque;
-                m_WheelColliders[3].brakeTorque = hbTorque;
-            }
-
-
-            CalculateRevs();
-            GearChanging();
-
-            AddDownForce();
-            CheckForWheelSpin();
-            TractionControl();
-        }
-
-
-        private void CapSpeed()
-        {
-            float speed = m_Rigidbody.velocity.magnitude;
-            switch (m_SpeedType)
-            {
-                case SpeedType.MPH:
-
-                    speed *= 2.23693629f;
-                    if (speed > m_Topspeed)
-                        m_Rigidbody.velocity = (m_Topspeed/2.23693629f) * m_Rigidbody.velocity.normalized;
-                    break;
-
-                case SpeedType.KPH:
-                    speed *= 3.6f;
-                    if (speed > m_Topspeed)
-                        m_Rigidbody.velocity = (m_Topspeed/3.6f) * m_Rigidbody.velocity.normalized;
-                    break;
-            }
-        }
-
-
-        private void ApplyDrive(float accel, float footbrake)
-        {
-
-            float thrustTorque;
-            switch (m_CarDriveType)
-            {
-                case CarDriveType.FourWheelDrive:
-                    thrustTorque = accel * (m_CurrentTorque / 4f);
-                    for (int i = 0; i < 4; i++)
-                    {
-                        m_WheelColliders[i].motorTorque = thrustTorque;
-                    }
-                    break;
-
-                case CarDriveType.FrontWheelDrive:
-                    thrustTorque = accel * (m_CurrentTorque / 2f);
-                    m_WheelColliders[0].motorTorque = m_WheelColliders[1].motorTorque = thrustTorque;
-                    break;
-
-                case CarDriveType.RearWheelDrive:
-                    thrustTorque = accel * (m_CurrentTorque / 2f);
-                    m_WheelColliders[2].motorTorque = m_WheelColliders[3].motorTorque = thrustTorque;
-                    break;
-
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                if (CurrentSpeed > 5 && Vector3.Angle(transform.forward, m_Rigidbody.velocity) < 50f)
+                if (advanced.gearDistributionBias < 0.5f)
                 {
-                    m_WheelColliders[i].brakeTorque = m_BrakeTorque*footbrake;
+                    gearPos = Mathf.Lerp(gearPos, lowBias, 1 - (advanced.gearDistributionBias*2));
                 }
-                else if (footbrake > 0)
+                else
                 {
-                    m_WheelColliders[i].brakeTorque = 0f;
-                    m_WheelColliders[i].motorTorque = -m_ReverseTorque*footbrake;
-                }
-            }
-        }
-
-
-        private void SteerHelper()
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                WheelHit wheelhit;
-                m_WheelColliders[i].GetGroundHit(out wheelhit);
-                if (wheelhit.normal == Vector3.zero)
-                    return; // wheels arent on the ground so dont realign the rigidbody velocity
-            }
-
-            // this if is needed to avoid gimbal lock problems that will make the car suddenly shift direction
-            if (Mathf.Abs(m_OldRotation - transform.eulerAngles.y) < 10f)
-            {
-                var turnadjust = (transform.eulerAngles.y - m_OldRotation) * m_SteerHelper;
-                Quaternion velRotation = Quaternion.AngleAxis(turnadjust, Vector3.up);
-                m_Rigidbody.velocity = velRotation * m_Rigidbody.velocity;
-            }
-            m_OldRotation = transform.eulerAngles.y;
-        }
-
-
-        // this is used to add more grip in relation to speed
-        private void AddDownForce()
-        {
-            m_WheelColliders[0].attachedRigidbody.AddForce(-transform.up*m_Downforce*
-                                                         m_WheelColliders[0].attachedRigidbody.velocity.magnitude);
-        }
-
-
-        // checks if the wheels are spinning and is so does three things
-        // 1) emits particles
-        // 2) plays tiure skidding sounds
-        // 3) leaves skidmarks on the ground
-        // these effects are controlled through the WheelEffects class
-        private void CheckForWheelSpin()
-        {
-            // loop through all wheels
-            for (int i = 0; i < 4; i++)
-            {
-                WheelHit wheelHit;
-                m_WheelColliders[i].GetGroundHit(out wheelHit);
-
-                // is the tire slipping above the given threshhold
-                if (Mathf.Abs(wheelHit.forwardSlip) >= m_SlipLimit || Mathf.Abs(wheelHit.sidewaysSlip) >= m_SlipLimit)
-                {
-                    m_WheelEffects[i].EmitTyreSmoke();
-
-                    // avoiding all four tires screeching at the same time
-                    // if they do it can lead to some strange audio artefacts
-                    if (!AnySkidSoundPlaying())
-                    {
-                        m_WheelEffects[i].PlayAudio();
-                    }
-                    continue;
+                    gearPos = Mathf.Lerp(gearPos, highBias, (advanced.gearDistributionBias - 0.5f)*2);
                 }
 
-                // if it wasnt slipping stop all the audio
-                if (m_WheelEffects[i].PlayingAudio)
-                {
-                    m_WheelEffects[i].StopAudio();
-                }
-                // end the trail generation
-                m_WheelEffects[i].EndSkidTrail();
-            }
-        }
-
-        // crude traction control that reduces the power to wheel if the car is wheel spinning too much
-        private void TractionControl()
-        {
-            WheelHit wheelHit;
-            switch (m_CarDriveType)
-            {
-                case CarDriveType.FourWheelDrive:
-                    // loop through all wheels
-                    for (int i = 0; i < 4; i++)
-                    {
-                        m_WheelColliders[i].GetGroundHit(out wheelHit);
-
-                        AdjustTorque(wheelHit.forwardSlip);
-                    }
-                    break;
-
-                case CarDriveType.RearWheelDrive:
-                    m_WheelColliders[2].GetGroundHit(out wheelHit);
-                    AdjustTorque(wheelHit.forwardSlip);
-
-                    m_WheelColliders[3].GetGroundHit(out wheelHit);
-                    AdjustTorque(wheelHit.forwardSlip);
-                    break;
-
-                case CarDriveType.FrontWheelDrive:
-                    m_WheelColliders[0].GetGroundHit(out wheelHit);
-                    AdjustTorque(wheelHit.forwardSlip);
-
-                    m_WheelColliders[1].GetGroundHit(out wheelHit);
-                    AdjustTorque(wheelHit.forwardSlip);
-                    break;
+                gearDistribution[g] = gearPos;
             }
         }
 
 
-        private void AdjustTorque(float forwardSlip)
+        private void OnDrawGizmosSelected()
         {
-            if (forwardSlip >= m_SlipLimit && m_CurrentTorque >= 0)
-            {
-                m_CurrentTorque -= 10 * m_TractionControl;
-            }
-            else
-            {
-                m_CurrentTorque += 10 * m_TractionControl;
-                if (m_CurrentTorque > m_FullTorqueOverAllWheels)
-                {
-                    m_CurrentTorque = m_FullTorqueOverAllWheels;
-                }
-            }
+            // visualise the adjusted centre of mass in the editor
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(GetComponent<Rigidbody>().position + Vector3.up*adjustCentreOfMass, 0.2f);
         }
 
-
-        private bool AnySkidSoundPlaying()
+        // Immobilize can be called from other objects, if the car needs to be made uncontrollable
+        // (eg, from asplosion!)
+        public void Immobilize()
         {
-            for (int i = 0; i < 4; i++)
-            {
-                if (m_WheelEffects[i].PlayingAudio)
-                {
-                    return true;
-                }
-            }
-            return false;
+            immobilized = true;
+        }
+
+        // Reset is called via the ObjectResetter script, if present.
+        public void Reset()
+        {
+            immobilized = false;
         }
     }
 }

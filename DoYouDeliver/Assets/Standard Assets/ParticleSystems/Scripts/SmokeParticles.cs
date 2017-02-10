@@ -1,13 +1,11 @@
-using System;
-using UnityEngine;
-using Random = UnityEngine.Random;
+﻿using UnityEngine;
 
-namespace UnityStandardAssets.Effects
+namespace UnitySampleAssets.Effects
 {
     public class SmokeParticles : MonoBehaviour
     {
-        public AudioClip[] extinguishSounds;
 
+        public AudioClip[] extinguishSounds;
 
         private void Start()
         {

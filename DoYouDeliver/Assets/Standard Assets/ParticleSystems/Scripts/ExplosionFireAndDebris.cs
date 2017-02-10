@@ -1,17 +1,15 @@
-using System;
+﻿using UnityEngine;
 using System.Collections;
-using UnityEngine;
-using Random = UnityEngine.Random;
 
-namespace UnityStandardAssets.Effects
+namespace UnitySampleAssets.Effects
 {
     public class ExplosionFireAndDebris : MonoBehaviour
     {
+
         public Transform[] debrisPrefabs;
         public Transform firePrefab;
         public int numDebrisPieces = 0;
         public int numFires = 0;
-
 
         private IEnumerator Start()
         {
@@ -29,7 +27,7 @@ namespace UnityStandardAssets.Effects
             yield return null;
 
             float r = 10*multiplier;
-            var cols = Physics.OverlapSphere(transform.position, r);
+            Collider[] cols = Physics.OverlapSphere(transform.position, r);
             foreach (var col in cols)
             {
                 if (numFires > 0)
@@ -58,12 +56,12 @@ namespace UnityStandardAssets.Effects
             }
         }
 
-
         private void AddFire(Transform t, Vector3 pos, Vector3 normal)
         {
             pos += normal*0.5f;
             Transform fire = (Transform) Instantiate(firePrefab, pos, Quaternion.identity);
             fire.parent = t;
         }
+
     }
 }

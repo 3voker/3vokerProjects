@@ -1,49 +1,41 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace UnityStandardAssets.Effects
+namespace UnitySampleAssets.Effects
 {
     public class WaterHoseParticles : MonoBehaviour
     {
+        private ParticleCollisionEvent[] collisionEvents = new ParticleCollisionEvent[16];
+
         public static float lastSoundTime;
         public float force = 1;
 
-
-        private ParticleCollisionEvent[] m_CollisionEvents = new ParticleCollisionEvent[16];
-        private ParticleSystem m_ParticleSystem;
-
-
-        private void Start()
-        {
-            m_ParticleSystem = GetComponent<ParticleSystem>();
-        }
-
-
         private void OnParticleCollision(GameObject other)
         {
-            int safeLength = m_ParticleSystem.GetSafeCollisionEventSize();
 
-            if (m_CollisionEvents.Length < safeLength)
+            int safeLength = GetComponent<ParticleSystem>().GetSafeCollisionEventSize();
+
+            if (collisionEvents.Length < safeLength)
             {
-                m_CollisionEvents = new ParticleCollisionEvent[safeLength];
+                collisionEvents = new ParticleCollisionEvent[safeLength];
             }
 
-            int numCollisionEvents = m_ParticleSystem.GetCollisionEvents(other, m_CollisionEvents);
+            int numCollisionEvents = GetComponent<ParticleSystem>().GetCollisionEvents(other, collisionEvents);
             int i = 0;
 
             while (i < numCollisionEvents)
             {
+
                 if (Time.time > lastSoundTime + 0.2f)
                 {
                     lastSoundTime = Time.time;
                 }
 
-                var col = m_CollisionEvents[i].colliderComponent;
-                var attachedRigidbody = col.GetComponent<Rigidbody>();
-                if (attachedRigidbody != null)
+                var col = collisionEvents[i].collider;
+
+                if (col.attachedRigidbody != null)
                 {
-                    Vector3 vel = m_CollisionEvents[i].velocity;
-                    attachedRigidbody.AddForce(vel*force, ForceMode.Impulse);
+                    Vector3 vel = collisionEvents[i].velocity;
+                    col.attachedRigidbody.AddForce(vel*force, ForceMode.Impulse);
                 }
 
                 other.BroadcastMessage("Extinguish", SendMessageOptions.DontRequireReceiver);

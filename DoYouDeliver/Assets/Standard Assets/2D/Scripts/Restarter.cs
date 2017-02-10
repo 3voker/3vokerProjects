@@ -1,17 +1,13 @@
-using System;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
-namespace UnityStandardAssets._2D
+namespace UnitySampleAssets._2D
 {
     public class Restarter : MonoBehaviour
     {
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (other.tag == "Player")
-            {
-                SceneManager.LoadScene(SceneManager.GetSceneAt(0).path);
-            }
+                Application.LoadLevel(Application.loadedLevelName);
         }
     }
 }
