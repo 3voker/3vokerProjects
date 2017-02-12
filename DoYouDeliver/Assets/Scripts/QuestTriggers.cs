@@ -120,6 +120,7 @@ public class QuestTriggers : MonoBehaviour {
         //Arrow should rotate in the direction of the homePoint
         //Find compass youtube video for help
       //  redArrow.TransformDirection
+      //Reactivate homebase GameObject
     }
 
     private void CustomerFeedBack()
