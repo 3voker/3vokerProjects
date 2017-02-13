@@ -13,100 +13,87 @@ public class QuestTriggers : MonoBehaviour {
     [SerializeField]
     GameObject dropOffPoint;
 
+    [SerializeField]
+    GameObject pizzaSprite;
+
+    [SerializeField]
+    GameObject currentSprite;
+
     int newLocation;
     int current;
     bool hasPizzaOrder = false;
 
     RectTransform greenArrow;
     RectTransform redArrow;
-
+    SpriteRenderer spriteRenderer;
 
     //[SerializeField]
     //GameObject key;
-
-    [SerializeField]
-    Camera mainCamera;
-
-    //[SerializeField]
-    //GameObject[] locations;
-    [SerializeField]
-    Vector3[] locations;
-
     //[SerializeField]
     //Camera cutSceneCamera;
-
     //[SerializeField]
     //private int numOfEnemies;
     //[SerializeField]
     //Animator anim;
-
     //AudioSource audioSource;
+    //[SerializeField]
+    //GameObject[] locations;
 
+    [SerializeField]
+    Camera mainCamera;
 
+    [SerializeField]
+    Vector3[] locations;
+
+    Collider homePointCollider;
+
+    Collider dropOffPointCollider;
 
     void Start()
-    {
-        //anim = GetComponent<Animation>();
-        //key.SetActive(true);
-        //mainCamera.enabled = true;
-        //cutSceneCamera.enabled = false;
-        
-        NextMission();
+    {       
+        homePointCollider = homePoint.GetComponent<Collider>();
+        dropOffPointCollider = dropOffPoint.GetComponent<Collider>();
+        spriteRenderer = pizzaSprite.GetComponent<SpriteRenderer>();
+        CheckMission(0);
     }
     void Update()
     {
 
         CheckMission(current);
-        //if (anim.GetCurrentAnimatorStateInfo(0).IsName("Done playing"))
-        //{
-        //    key.SetActive(false);
-        //    mainCamera.enabled = true;
-        //    Destroy(cutSceneCamera);
-        //    Destroy(gameObject);
-           
-        //   // key.SetActive(false);
-        //}
+   
     }
     void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag == "Player")
         {
 
-            //If player touches Homepoint. 
-            //Gets new pizza 
-            //Is assigned next Mission
-            //Homepoint closes(Deactivates)
-            if(this.gameObject == homePoint)
-            {          
-                hasPizzaOrder = true;
-                BossFeedBack();
-                NextMission();
-                homePoint.SetActive(false);
-            }
-            //Else If player touches Random Drop Off Point
-            //Loses Pizza 
-            //Customer compliments or complains
-            //Homepoint reopens doors
-            //Return To Homepoint
-            //Destroy this specific drop Off Point
-            else if (this.gameObject == dropOffPoint)
+            foreach (Collider collider in this.gameObject.GetComponents<Collider>())
             {
-                hasPizzaOrder = false;
-                CustomerFeedBack();
-                homePoint.SetActive(true);
-                ReturnToBase();
-                Destroy(dropOffPoint);
+                collider.isTrigger = true;
+                if (collider is SphereCollider)
+                {
+                    SphereCollider homePointCollider = (SphereCollider)collider;
+                    //Do some stuff with the box collider
+                    hasPizzaOrder = true;
+                    BossFeedBack();
+                    Debug.Log("HomePoint Reached!");
+                    NextMission();
+                    homePoint.SetActive(false);
+                }
+                else if (collider is BoxCollider)
+                {
+                    BoxCollider dropOffPointCollider = (BoxCollider)collider;
+                    //Do some stuff with the cyrcle collider                                      
+                    hasPizzaOrder = false;
+                    CustomerFeedBack();
+                    Debug.Log("Drop off point Reached!");
+                    homePoint.SetActive(true);
+                    ReturnToBase();
+                    Destroy(dropOffPoint);                       
+                }
             }
-
-            //mainCamera.enabled = false;
-            //cutSceneCamera.enabled = true;
-            //anim.SetBool("isTriggered", true);
-            //anim["cutsceneAnimation"].wrapMode = WrapMode.Once;
-            // anim.Play("cutsceneAnimation");
-            //if (anim.clip("cutsceneAnimation"))
-            //transform(0, 0, 0);
-        }
-        //Destroy(other.gameObject);
+     
+        }       
     }
 
     private void BossFeedBack()
@@ -119,12 +106,16 @@ public class QuestTriggers : MonoBehaviour {
         //Activate red arrow when returning to base
         //Arrow should rotate in the direction of the homePoint
         //Find compass youtube video for help
-      //  redArrow.TransformDirection
-      //Reactivate homebase GameObject
+        //  redArrow.TransformDirection
+        //Reactivate homebase GameObject
+         
+
+
     }
 
     private void CustomerFeedBack()
-    {
+    {   //Happy, Ok, Angry feed back. Rating from customer gets to boss feedback. 
+        
         throw new NotImplementedException();
     }
 
@@ -143,40 +134,51 @@ public class QuestTriggers : MonoBehaviour {
     {
         if(newLocation == current && hasPizzaOrder)
         {
-            foreach (Vector3 location in locations)
-            {
-                if(newLocation != current && hasPizzaOrder)
-                {
-                    //Activate green arrow when going to new Location
-                    //Arrow should rotate in the direction of the drop Off Point
-                    //Find compass youtube video for help
-                    Instantiate(dropOffPoint, location, Quaternion.identity);
-                    break;
-                }
-                else if(newLocation != current && hasPizzaOrder == false)
-                {
-                    ReturnToBase();
-                }
-            }
-            NextMission();                     
+            CreateDropOff();
+            EnrouteMission();                     
         }
      else if(newLocation == current && hasPizzaOrder == false)
         {
+            EnrouteMission();
             ReturnToBase();
+           // Debug.Log("Return To Base//CheckMission Method");
         }
     }
-    /*  EnemySpawn()
- {
-     for (int i = 0; i< 3; i++)
-             { 		
-           Instantiate(enemyPrefab, new Vector3(i* 2.0f, 0, player + 10), Quaternion.identity);
-            // Instantiate(EnemyPrefab)
+
+    private void CreateDropOff()
+    {
+        foreach (Vector3 location in locations)
+        {
+            if (newLocation != current && hasPizzaOrder)
+            {
+                //Activate green arrow when going to new Location
+                //Arrow should rotate in the direction of the drop Off Point
+                //Find compass youtube video for help
+                
+                GameObject currentDropOff;
+currentDropOff = Instantiate(dropOffPoint, location, dropOffPoint.transform.rotation) as GameObject;
+                break;
+                currentSprite.transform.position
             }
+            else if (newLocation != current && hasPizzaOrder == false)
+            {
+                ReturnToBase();
+            }
+        }       
+    }
 
-             if (numOfEnemies == 0)
-         {
-
-         } 
-
-         } */
+    private void EnrouteMission()
+    {
+        if (hasPizzaOrder)
+        {
+            spriteRenderer.enabled = true;
+        //    Debug.Log("hasPizzaOrder //EnrouteMission");
+            
+        }
+        else if(hasPizzaOrder == false)
+        {
+            spriteRenderer.enabled = false;
+          //  Debug.Log("!hasPizza //EnrouteMission");
+        }
+    }
 }

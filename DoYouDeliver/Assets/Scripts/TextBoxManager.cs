@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System;
 
 public class TextBoxManager : MonoBehaviour {
 
@@ -10,6 +11,7 @@ public class TextBoxManager : MonoBehaviour {
 
     [SerializeField]
     Text theText;
+
     [SerializeField]
     TextAsset textFile;
 
@@ -19,14 +21,18 @@ public class TextBoxManager : MonoBehaviour {
     public int currentLine;
     public int endAtLine;
 
+    bool isTextBoxPresent;
+
    // public PlayerController player;
 
     void Start()
     {
+        
         //player = FindObjectOfType<PlayerController>();  
         if (textFile != null)
         {
             textLines = (textFile.text.Split('\n'));
+            isTextBoxPresent = true;
         }
         if(endAtLine == 0)
         {
@@ -37,14 +43,24 @@ public class TextBoxManager : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
+       
+        TextToggle();      
+      
+    }
+
+   
+
+    private void TextToggle()
+    {
         theText.text = textLines[currentLine];
-        if(Input.GetKeyDown(KeyCode.Return))
+        if (Input.GetKeyDown(KeyCode.Return) && (isTextBoxPresent))
         {
             currentLine++;
         }
-        if(currentLine > endAtLine)
+        if (currentLine > endAtLine)
         {
             textBox.SetActive(false);
+            isTextBoxPresent = false;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnitySampleAssets.CrossPlatformInput;
 
@@ -11,6 +12,13 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         public bool walkByDefault = false; // toggle for walking state
 
         public bool lookInCameraDirection = true;// should the character be looking in the same direction that the camera is facing
+
+
+        bool isAlive = true;
+        public void TakeDamage()
+        {
+            isAlive = false;
+        }
 
         private Vector3 lookPos; // The position that the character should be looking towards
         private ThirdPersonCharacter character; // A reference to the ThirdPersonCharacter on the object
@@ -58,6 +66,10 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             // calculate move direction to pass to character
             if (cam != null)
             {
+                if(isAlive == false)
+                {
+                    gameOver();  
+                }
                 // calculate camera relative direction to move:
                 camForward = Vector3.Scale(cam.forward, new Vector3(1, 0, 1)).normalized;
                 move = v*camForward + h*cam.right;
@@ -86,6 +98,11 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             // pass all parameters to the character control script
             character.Move(move, crouch, jump, lookPos);
             jump = false;
+        }
+
+        private void gameOver()
+        {
+            
         }
     }
 }

@@ -14,7 +14,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             ThirdPersonUserControl player = GetComponent<ThirdPersonUserControl>();
             if (other.gameObject.tag == "Player")
             {
-                // Player.TakeDamage();
+                 player.TakeDamage();
             }
         }
     }

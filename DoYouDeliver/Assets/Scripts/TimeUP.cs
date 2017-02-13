@@ -5,21 +5,22 @@ using System;
 public class TimeUP : TimeLimit {
 
     // Use this for initialization
-    float timeAdded;
+  
     bool shouldDisableWhenDonePlayingSoundEffect = false;
     public AudioSource audioSource;
     private float duration;
 
+   
     void start()
     {
-        timeAdded = UnityEngine.Random.Range(5, 20);
         audioSource = GetComponent<AudioSource>();
+      
     }
-    void OnTriggerEnter(Collider other)
+    void OnTriggerExit(Collider other)
     {
         if (other.gameObject.tag == "Player")
         {
-            timeAdded += TimeLeft;
+            TimeUP();
             Debug.Log("Collision Detected");
             audioSource.Play();
             shouldDisableWhenDonePlayingSoundEffect = true;
