@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class MoveTowardScript : MonoBehaviour {
 
@@ -12,7 +13,12 @@ public class MoveTowardScript : MonoBehaviour {
     float speed;
     void Update()
     {
-        transform.position = Vector3.MoveTowards(transform.position, endPosGO.position, speed * Time.deltaTime);
+        moveTowardsThat();
+      
     }
 
+    private void moveTowardsThat()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, endPosGO.position, speed * Time.deltaTime);
+    }
 }

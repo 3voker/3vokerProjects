@@ -22,7 +22,6 @@ GameObject:
   - 33: {fileID: 33000010794818680}
   - 135: {fileID: 135000013385910184}
   - 23: {fileID: 23000010142428060}
-  - 114: {fileID: 114000013279355476}
   m_Layer: 0
   m_Name: DropOffPointTrigger
   m_TagString: Untagged
@@ -79,23 +78,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012307741448}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &114000013279355476
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012307741448}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e00fe377b7915ca4da6824a652a336d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 149790, guid: 7737647c22c1fc64a88d5cd030c352ce, type: 2}
-  homePoint: {fileID: 1000013381608172, guid: 7b62ab4d9f56a7b4b83ce65e75e26e69, type: 2}
-  dropOffPoint: {fileID: 1000012307741448}
-  newLocation: 0
-  mainCamera: {fileID: 0}
-  locations: []
 --- !u!135 &135000013385910184
 SphereCollider:
   m_ObjectHideFlags: 1
