@@ -1023,8 +1023,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36a3f113616b450408a02b66f3099c06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minAgentSpeed: 10
-  maxAgentSpeed: 20
+  minAgentSpeed: 36
+  maxAgentSpeed: 70
   m_waypointManager: {fileID: 0}
   currentTarget: {fileID: 0}
   currentNodeTarget: {x: 0, y: 0, z: 0}

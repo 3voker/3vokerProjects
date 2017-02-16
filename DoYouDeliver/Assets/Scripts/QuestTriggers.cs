@@ -8,117 +8,70 @@ public class QuestTriggers : MonoBehaviour {
     GameObject player;
     [SerializeField]
     GameObject homePoint;
+
+    [SerializeField]
+    GameObject pizzaSprite;
     Collider homePointCollider;
     [SerializeField]
     GameObject dropOffPoint;
     Collider dropOffPointCollider;
-    [SerializeField]
-    GameObject pizzaSprite;
+    SpriteRenderer spriteRenderer;
     [SerializeField]
     GameObject currentSprite;
     int speed = 5;
-    int newLocation;
-    int current;
+    int orders = 0;
     bool hasPizzaOrder = false;
     RectTransform greenArrow;
     RectTransform redArrow;
-    SpriteRenderer spriteRenderer;
     [SerializeField]
     Camera mainCamera;
     [SerializeField]
-   Transform[] locations; 
+   Transform[] locations;
+    [SerializeField]
+    GameObject cellphonePanel;
+
+   
      
     void Start()
-    {             
+    {
         spriteRenderer = pizzaSprite.GetComponent<SpriteRenderer>();
         homePointCollider = homePoint.GetComponent<Collider>();
         dropOffPointCollider = dropOffPoint.GetComponent<Collider>();
+        spriteRenderer.enabled = false;
+        CheckMission();
     }
-    void Update()
+    private void CheckMission()
     {
-        CheckMission(current);
-        CheckCollision(); 
-    }
-
-    private void CheckCollision()
-    {
-       if(dropOffPointCollider)
-        {
-
-        }
-    }
-
-    public bool Pizza
-    {
-        get
-        {
-            return hasPizzaOrder;
-        }            
-        set
-        {
-           hasPizzaOrder = value;
-        }
-    }
-
-
-    public void CheckMission(int current)
-    {
-        if (newLocation == current && hasPizzaOrder)
-        {
-            CreateDropOff();
+        if (spriteRenderer.enabled)
+        {          
             EnrouteMission();
         }
-        else if (newLocation == current && hasPizzaOrder == false)
-        {
-            EnrouteMission();          
-            // Debug.Log("Return To Base//CheckMission Method");
-        }
+           
     }   
     private void CreateDropOff()
     {
         foreach (Transform location in locations)
         {
-            if (newLocation != current && hasPizzaOrder)
-            {
-                //Activate green arrow when going to new Location
-                //Arrow should rotate in the direction of the drop Off Point
-                //Find compass youtube video for help
-                GameObject currentDropOff;
-                currentDropOff = Instantiate(dropOffPoint, location.position, dropOffPoint.transform.rotation) as GameObject;
-                currentSprite.transform.position = Vector3.MoveTowards(transform.position, dropOffPoint.transform.position, speed * Time.deltaTime);
-                break;
-            }
-            else if (newLocation != current && hasPizzaOrder == false)
-            {
-               // ReturnToBase();
-            }
+          
         }
     }
     private void EnrouteMission()
     {
-        if (hasPizzaOrder)
+        if (spriteRenderer.enabled)
         {
             spriteRenderer.enabled = true;
+            hasPizzaOrder = true;
+            orders++;
             //    Debug.Log("hasPizzaOrder //EnrouteMission");
         }
-        else if (hasPizzaOrder == false)
+        else if (!spriteRenderer.enabled)
         {
             spriteRenderer.enabled = false;
+            hasPizzaOrder = false;
             //  Debug.Log("!hasPizza //EnrouteMission");
         }
     }
-    private void NextMission()
-    {
-        if (hasPizzaOrder)
-        {
-            Debug.Log("Has mission!");
-            //Randomizes new location
-            newLocation = UnityEngine.Random.Range(0, locations.Length);
-            //Location selected   
-            Debug.Log("New Location: " + newLocation);
-            newLocation = current;
-        }
-    }
+   
 }
 
   

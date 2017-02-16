@@ -8,29 +8,33 @@ public class DropOffPointScript : MonoBehaviour
     [SerializeField]
     GameObject homePoint;
 
+    [SerializeField]
+    GameObject pizzaSprite;
     Collider homePointCollider;
-   
-    
+    SpriteRenderer spriteRenderer;
+    bool hasPizzaOrder = false;
 
+    public Vector3[] positions;
     void Start()
     {
+        //int randomNumber = UnityEngine.Random.Range(0, positions.Length);
+        //transform.position = positions[4];
         homePointCollider = homePoint.GetComponent<Collider>();
-        
+        spriteRenderer = pizzaSprite.GetComponent<SpriteRenderer>();
     }
 
     // Update is called once per frame
     void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Player")
-
-        {
-          
-            
-            //   CustomerFeedBack();
+        if (other.gameObject.tag == "Player" &&  spriteRenderer.enabled)
+        {                   
+    //   CustomerFeedBack();
             Debug.Log("Drop off point Reached!");
             homePoint.SetActive(true);
             homePointCollider.enabled = true;
             ReturnToBase();
+            hasPizzaOrder = false;
+            spriteRenderer.enabled = false;
         }
     }
     private void CustomerFeedBack()
@@ -45,8 +49,5 @@ public class DropOffPointScript : MonoBehaviour
         //Find compass youtube video for help
         //  redArrow.TransformDirection
         //Reactivate homebase GameObject
-
-
-
     }
 }
