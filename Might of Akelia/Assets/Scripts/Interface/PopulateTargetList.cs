@@ -112,6 +112,6 @@ public class PopulateTargetList : MonoBehaviour {
 	}
     void addtoArray(Transform obj)
        {
-    nearbyTargets.Add(obj);
+  //  nearbyTargets.Add(obj);
     }
 }
