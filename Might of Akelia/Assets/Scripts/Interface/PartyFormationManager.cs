@@ -15,7 +15,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         GameObject partyFormationPanelCenter;
         [SerializeField]
         GameObject[,] partyFormationSpots;
-
         [SerializeField]
         ThirdPersonCharacter thirdPersonCharacter;
         [SerializeField]
@@ -26,12 +25,15 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             get { return partyFormationPanel.activeSelf; }
         }
+        
 
+        
+
+       
 
         void Start()
         {
-
-
+          
             HidePartyFormationPanel();
         }
         void Update()
@@ -52,7 +54,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             if ((Input.GetButton("yButton")))
             {
-                Debug.Log("Enter was pressed");
+                Debug.Log("y was pressed");
                 if (IsPartyFormationPanelShowing)
                 {
                     
@@ -63,12 +65,14 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                     ShowPartyFormationPanel();
                 }
             }
+            
         }
 
         private void ShowPartyFormationPanel()
         {
             partyFormationPanel.SetActive(true);
             partyFormationPanel.transform.position = thirdPersonCharacter.transform.position;
+            
         }
         private void UpdateCursor()
         {

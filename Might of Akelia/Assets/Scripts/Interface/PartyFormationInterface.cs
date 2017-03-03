@@ -1,15 +1,21 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PartyFormationInterface : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    // Use this for initialization
+    [SerializeField]
+    Button button;
+    [SerializeField]
+    Text buttonText;
+    [SerializeField]
+    string playerSide;
+
+
+    public void SetSpace()
+    {
+        buttonText.text = playerSide;
+        button.interactable = false;
+    }
 }
