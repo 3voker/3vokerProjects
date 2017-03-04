@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System;
 
 namespace UnitySampleAssets.Characters.ThirdPerson
 {
@@ -75,9 +76,15 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         // Update is called once per frame
         void Update()
         {
+
+            EnableTextBox();
+            ReadTextFile();
+           
+        }
+
+        private void ReadTextFile()
+        {
             theText.text = textLines[currentLine];
-
-
             if (!isActive)
             {
                 return;
@@ -86,11 +93,15 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 currentLine += 1;
             }
-            if (currentLine > endAtLine)
+            if (currentLine > endAtLine || (Input.GetButtonDown("bButton")))
             {
                 DisableTextBox();
             }
+           // SendTextFileToChatLog();
         }
+
+       
+
         public void EnableTextBox()
         {
             textBox.SetActive(true);

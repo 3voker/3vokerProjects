@@ -21,7 +21,7 @@ public class PopulateTargetList : MonoBehaviour {
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    void OnCollisionEnter(GameObject other)
+    void OnCollisionEnter(Collision other)
     {
         foreach (Transform nearbyTarget in nearbyTargets)
         {
