@@ -5,8 +5,11 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 {
     public class ThirdPersonCharacter : MonoBehaviour
     {
+        
+        [SerializeField] private float jumpPower = 12;// determines the jump force applied when jumping (and therefore the jump height)
 
-        [SerializeField] private float jumpPower = 12; // determines the jump force applied when jumping (and therefore the jump height)
+        //NEW Double jump is not normally part of third person character script!
+        [SerializeField]  private float doubleJumpPower = 8;
         [SerializeField] private float airSpeed = 6; // determines the max speed of the character while airborne
         [SerializeField] private float airControl = 2; // determines the response speed of controlling the character while airborne
         [Range(1, 4)] [SerializeField] public float gravityMultiplier = 2; // gravity modifier - often higher than natural gravity feels right for game characters
@@ -28,6 +31,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             public PhysicMaterial zeroFrictionMaterial; // used when in motion to enable smooth movement
             public PhysicMaterial highFrictionMaterial; // used when stationary to avoid sliding down slopes
             public float jumpRepeatDelayTime = 0.25f; // amount of time that must elapse between landing and being able to jump again
+            public float doubleJumpDelayTime = .5f; //NEW amount of time before can do double jump
             public float runCycleLegOffset = 0.2f; // animation cycle offset (0-1) used for determining correct leg to jump off
             public float groundStickyEffect = 5f; // power of 'stick to ground' effect - prevents bumping down slopes.
         }
@@ -41,11 +45,12 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         private Vector3 currentLookPos; // The current position where the character is looking
         private float originalHeight; // Used for tracking the original height of the characters capsule collider
         private Animator animator; // The animator for the character
-        private float lastAirTime; // USed for checking when the character was last in the air for controlling jumps
+        private float lastAirTime;// USed for checking when the character was last in the air for controlling jumps
+        private float lastJumpTime; //NEW feature for double jump feature
         private CapsuleCollider capsule; // The collider for the character
         private const float half = 0.5f; // whats it says, it's a constant for a half
         private Vector3 moveInput;
-   //     private Vector3 sprintInput;
+        private bool sprintInput;
         private bool crouchInput;
         private bool jumpInput;
         private bool doubleJumpInput;
@@ -110,15 +115,15 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         }
         // The Move function is designed to be called from a separate component
         // based on User input, or an AI control script
-        public void Move(Vector3 move, bool crouch, bool jump, Vector3 lookPos, bool doubleJump)
+        public void Move(Vector3 move, bool crouch, bool jump, Vector3 lookPos, bool doubleJump, bool sprint)
         {
 
             if (move.magnitude > 1) move.Normalize();
 
             // transfer input parameters to member variables.
             this.moveInput = move;
-            //this.sprintInput = sprint;
             this.crouchInput = crouch;
+            this.sprintInput = sprint;
             this.jumpInput = jump;
             this.doubleJumpInput = doubleJump;
             this.currentLookPos = lookPos;
@@ -259,9 +264,12 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             }
 
             // remember when we were last in air, for jump delay
-            if (!onGround) lastAirTime = Time.time;
-
-        }
+            if (!onGround)
+            {
+                lastAirTime = Time.time;
+                lastJumpTime = Time.time;
+            }
+    }
 
         private void SetFriction()
         {
@@ -302,20 +310,42 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             // check whether conditions are right to allow a jump:
             bool animationGrounded = animator.GetCurrentAnimatorStateInfo(0).IsName("Grounded");
             bool okToRepeatJump = Time.time > lastAirTime + advancedSettings.jumpRepeatDelayTime;
-            bool okToDoubleJump = Time.time < lastAirTime + advancedSettings.jumpRepeatDelayTime;
+
+            //NEW Create different condition that doesn't rely on time/grounded variable
+            bool okToDoubleJump = Time.time > lastJumpTime + advancedSettings.doubleJumpDelayTime; ;
 
             if (jumpInput && !crouchInput && okToRepeatJump && animationGrounded)
             {
                 // jump!
-                onGround = false;
-                velocity = moveInput*airSpeed;
-                velocity.y = jumpPower;
-                if (doubleJumpInput && onGround == false && okToDoubleJump)
+                if (sprintInput)
                 {
-                    velocity = jumpPower*moveInput;
-                    
+                    airSpeed *= 6;
+                    jumpPower *= 2;
+                }
+                else
+                {
+                    airSpeed *= 1;
+                    jumpPower *= 1;
+                    onGround = false;
+                    velocity = moveInput * airSpeed;
+                    velocity.y = jumpPower;
                 }
             }
+            if (doubleJumpInput && !onGround && okToDoubleJump)
+            {
+                if (sprintInput)
+                {
+                    airSpeed *= 6;
+                    jumpPower *= 2;
+                }
+                else
+                {
+                    airSpeed *= 1;
+                    jumpPower *= 1;
+                    velocity = moveInput * airSpeed;
+                    velocity.y = doubleJumpPower;
+                }
+            }          
         }
 
         private void HandleAirborneVelocities()

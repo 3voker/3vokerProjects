@@ -39,12 +39,12 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 agent.transform.position = transform.position;
 
                 // use the values to move the character
-                character.Move(agent.desiredVelocity, false, false, targetPos, false);
+                character.Move(agent.desiredVelocity, false, false, targetPos, false, false);
             }
             else
             {
                 // We still need to call the character's move function, but we send zeroed input as the move param.
-                character.Move(Vector3.zero, false, false, transform.position + transform.forward*100, false);
+                character.Move(Vector3.zero, false, false, transform.position + transform.forward*100, false, false);
 
             }
         }

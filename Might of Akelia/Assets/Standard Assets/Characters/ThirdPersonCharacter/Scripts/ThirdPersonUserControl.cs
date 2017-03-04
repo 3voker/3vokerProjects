@@ -10,9 +10,10 @@ namespace UnitySampleAssets.Characters.ThirdPerson
     {
 
         public bool walkByDefault = false; // toggle for walking state
-
+        public bool sprintByDefault = false; //NEW feature, toggle sprint feature
         public bool lookInCameraDirection = true;// should the character be looking in the same direction that the camera is facing
-       // public int sprintSpeed; //sprint speed.
+        
+        // public int sprintSpeed; //sprint speed.
         private Vector3 lookPos; // The position that the character should be looking towards
         private ThirdPersonCharacter character; // A reference to the ThirdPersonCharacter on the object
         private Transform cam; // A reference to the main camera in the scenes transform
@@ -22,10 +23,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
        
         private bool isMoving;
 
-        
-
-       // private Vector3 sprint;
-        //private bool isSprinting;
         private bool jump;
         private bool doubleJump;
         // the world-relative desired move direction, calculated from the camForward and user input.
@@ -51,10 +48,13 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
         void Update()
         {
-           
+
             if (!jump)
+            {
                 jump = (Input.GetButton("aButton"));
-                if(jump)
+            }
+
+            if(jump && !doubleJump)
             {
                 doubleJump = (Input.GetButton("aButton"));
             }
@@ -67,6 +67,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             // read inputs
        //     movement();
             bool crouch = false;
+            bool sprint = false;
 
             // float h = CrossPlatformInputManager.GetAxis("Horizontal");
             float h = Input.GetAxis("leftJoystickHorizontal");
@@ -80,12 +81,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 // calculate camera relative direction to move:
                 camForward = Vector3.Scale(cam.forward, new Vector3(1, 0, 1)).normalized;
-                move = v*camForward + h*cam.forward;
-                //tried to make sprint
-                //if (Input.GetButton("xButton")) //((Input.GetAxis("leftTrigger") > 0) && (Input.GetAxis("rightTrigger") > 0)) 
-                //{
-                //    move = v * camForward + h * cam.forward;
-                //}     
+                move = v*camForward + h*cam.forward;            
             }
             else 
             {
@@ -97,10 +93,25 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
 #if !MOBILE_INPUT
             // On non-mobile builds, walk/run speed is modified by a key press.
-            bool walkToggle = (Input.GetButton("backButton"));
+            bool walkToggle = (Input.GetButton("leftBumper"));
+            //Testing Sprint feature
+            
             // We select appropriate speed based on whether we're walking by default, and whether the walk/run toggle button is pressed:
             float walkMultiplier = (walkByDefault ? walkToggle ? 1 : 0.5f : walkToggle ? 0.5f : 1);
             move *= walkMultiplier;
+
+            bool sprintToggle = (Input.GetButton("rightBumper"));
+
+            float sprintMultiplier = (sprintByDefault ? sprintToggle ? 1 : 3f : sprintToggle ? 3f : 1);
+            move *= sprintMultiplier;
+            if (sprintToggle)
+            {
+                Debug.Log("Sprinting.");
+            }
+            else
+            {
+                Debug.Log("Not sprinting");
+            }
 #endif
 
             // calculate the head look target position
@@ -109,20 +120,9 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                           : transform.position + transform.forward*100;
 
             // pass all parameters to the character control script
-            character.Move(move, crouch, jump, lookPos, doubleJump);
+            character.Move(move, crouch, jump, lookPos, doubleJump, sprint);
             jump = false;
             doubleJump = false;
         }
-
-     //   private void movement()
-        //{
-        //    if (Input.GetAxis("leftJoystickHorizontal") > .5f)
-        //    {
-        //        isMoving = true;
-
-        //    }
-        //    else
-        //        isMoving = false;
-        //}
     }
 }

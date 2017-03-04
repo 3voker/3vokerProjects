@@ -69,20 +69,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             pauseMenuPanel.SetActive(true);
             thirdPersonCharacter.enabled = false;
             thirdPersonUserControl.enabled = false;
-        }
-        //private void UpdateThirdPersonController()
-        //{
-        //    if (IsPauseMenuShowing)
-        //    {
-        //        thirdPersonCharacter.enabled = false;
-        //        thirdPersonUserControl.enabled = false;
-        //    }
-        //    else
-        //    {
-        //        thirdPersonCharacter.enabled = true;
-        //        thirdPersonUserControl.enabled = true;
-        //    }
-        //}
+        }       
         private void UpdateCursor()
         {
             if (IsPauseMenuShowing)
@@ -90,11 +77,11 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
             }
-            else
-            {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+            //else
+            //{
+            //    Cursor.visible = false;
+            //    Cursor.lockState = CursorLockMode.Locked;
+            //}
         }
     }
 }
