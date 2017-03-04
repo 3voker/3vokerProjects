@@ -18,4 +18,5 @@ public class PartyFormationInterface : MonoBehaviour {
         buttonText.text = playerSide;
         button.interactable = false;
     }
+    
 }

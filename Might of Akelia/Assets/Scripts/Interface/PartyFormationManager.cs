@@ -12,80 +12,70 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         [SerializeField]
         GameObject partyFormationPanel;
         [SerializeField]
-        GameObject partyFormationPanelCenter;
+        Transform partyFormationPanelCenter;
         [SerializeField]
         GameObject[,] partyFormationSpots;
         [SerializeField]
         ThirdPersonCharacter thirdPersonCharacter;
         [SerializeField]
         ThirdPersonUserControl thirdPersonUserControl;
-
-
+     
+        float distance = 0f;
         bool IsPartyFormationPanelShowing
         {
             get { return partyFormationPanel.activeSelf; }
-        }
-        
-
-        
-
-       
-
+        }             
         void Start()
         {
-          
+            
             HidePartyFormationPanel();
         }
         void Update()
         {
             //InventoryObjectRepresented.DescriptionText
             HandleInput();
-            UpdateCursor();
             //   UpdateThirdPersonController();
           //  UpdateDescriptionText(defaultDescriptionMessage);  //public const string defaultDescriptionMessage
-        }
-
+        }       
         private void HidePartyFormationPanel()
         {
             partyFormationPanel.SetActive(false);
+            thirdPersonCharacter.enabled = true;
+            thirdPersonUserControl.enabled = true;
         }
-
         void HandleInput()
-        {
-            if ((Input.GetButton("yButton")))
-            {
-                Debug.Log("y was pressed");
-                if (IsPartyFormationPanelShowing)
-                {
-                    
-                    HidePartyFormationPanel();
-                }
-                else
-                {
-                    ShowPartyFormationPanel();
-                }
-            }
-            
-        }
-
-        private void ShowPartyFormationPanel()
-        {
-            partyFormationPanel.SetActive(true);
-            partyFormationPanel.transform.position = thirdPersonCharacter.transform.position;
-            
-        }
-        private void UpdateCursor()
         {
             if (IsPartyFormationPanelShowing)
             {
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
+                if (Input.anyKeyDown)
+                {
+                    switch (Input.inputString)
+                    {
+                        case "bButton":
+                            Debug.Log("bButton pressed");
+                            HidePartyFormationPanel();
+                            break;
+                        case "aButton":
+                            Debug.Log("aButton pressed");
+                            break;      
+                        default:
+                            Debug.Log("This is not a valid key");
+                            HidePartyFormationPanel();
+                            break;
+                    }
+                }
             }
-            else
+            else if((Input.GetButton("yButton")) && !IsPartyFormationPanelShowing)
             {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
+                ShowPartyFormationPanel();
             }
         }
+        void ShowPartyFormationPanel()
+        {
+            partyFormationPanel.SetActive(true);         
+            partyFormationPanel.transform.position = thirdPersonCharacter.transform.position;
+            thirdPersonCharacter.enabled = false;
+            thirdPersonUserControl.enabled = false;            
+        }     
     }
 }

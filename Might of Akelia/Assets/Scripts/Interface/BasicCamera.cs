@@ -10,30 +10,36 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
         IActivatable objectLookedAt;       
         [SerializeField]
-        LayerMask layerActivatableObjectsAreOn;
-       
+        LayerMask layerActivatableObjectsAreOn;      
         [SerializeField]
         Transform lookAt;
-
         [SerializeField]
         Transform TargetPopulator;
         //CamTransform is used to control the camera's positioning and movement.
         [SerializeField]
         Transform camTransform;
-
+        //Use panel activity to control camera controls
+        [SerializeField]
+        GameObject partyFormationPanel;
+        [SerializeField]
+        GameObject pauseMenuPanel;
         //Ray used to determine if an object can be activated. 
         [SerializeField]
         float maxDistanceToActivateObjects = 3;
        // cam is used to manipulate any features exclusive to the Camera functions. 
         Camera cam;
         Vector3 offset;
-
+        //This is for the 3rd person control clamp
         const float Y_ANGLE_MIN = 0.0F;
         const float Y_ANGLE_MAX = 50.0F;
+        //PartyFormation and perhaps other interface control clamps
+        const float X_ANGLE_MIN = 0.0F;
+        const float X_ANGLE_MAX = 60.0F;
         [SerializeField]
         float distance = 5f;
         float currentX;
         float currentY;
+     
         //I don't remember what the fuck this is.
         //float sensitivityX = 4f;
         //float sensitivityy = 2f;
@@ -49,20 +55,24 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             float desiredTargetX = currentX;
             float desiredTargetY = currentY;
             cam = GetComponent<Camera>();
-        }
-        
-
+        }        
         private void Update()
-        {
+        {     
             camControl();
             checkForTargets();
         }
-
         private void camControl()
-        {
-            currentX += Input.GetAxis("rightJoystickHorizontal");
-            currentY += Input.GetAxis("rightJoystickVertical");
-            currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);
+        {                   
+            if (partyFormationPanel.activeSelf)
+            {
+                currentY = Mathf.Clamp(partyFormationPanel.transform.position.y + 4, Y_ANGLE_MIN, Y_ANGLE_MAX);
+                currentX = Mathf.Clamp(partyFormationPanel.transform.position.y + 4, X_ANGLE_MIN, X_ANGLE_MAX);
+            }
+            if (!pauseMenuPanel.activeSelf)
+            {
+                playerCamInputs();
+            }
+
             if (Input.GetButton("rightJoystickButton"))
             {
                 camZoom();
@@ -71,20 +81,25 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
                 //currentY = lookAt.position.y;
                 // offset = transform.position - lookAt.position;
-
             }
         }
+
+        private void playerCamInputs()
+        {
+            currentX += Input.GetAxis("rightJoystickHorizontal");
+            currentY += Input.GetAxis("rightJoystickVertical");
+            currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);
+        }
+
         //   cam = Camera.main;
 
         private void checkForTargets()
-        {
-           
+        {           
             RaycastHit hit;
             Vector3 endPoint = transform.position + maxDistanceToActivateObjects * transform.forward;
            // Ray ray = new Ray(transform.position, endPoint);
             Ray ray = cam.ScreenPointToRay(new Vector3(250, 250, 0));
             //  Ray ray = cam.ScreenPointToRay(new Vector3 (transform.position.x, camTransform.position.y, 0));
-
             if (Physics.Raycast(ray, out hit))
             {
                 Transform objectHit = hit.transform;
@@ -92,12 +107,8 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 targetActivatable();
                 // Do something with the object that was hit by the raycast.
             }
-
             Debug.DrawRay(ray.origin, ray.direction * 10, Color.red);
         }
-
- 
-
         private void targetActivatable()
         {
             if (gameObject.tag == "Enemy")
@@ -117,12 +128,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
             }
         }
-
-
-
-
-
-        private void camZoom()
+       private void camZoom()
         {
             camTransform.forward = lookAt.transform.forward;
             desiredAngle = lookAt.transform.eulerAngles.y;

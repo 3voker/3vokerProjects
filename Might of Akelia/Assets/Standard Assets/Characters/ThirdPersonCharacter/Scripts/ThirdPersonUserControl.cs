@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using UnitySampleAssets.CrossPlatformInput;
+//using UnitySampleAssets.CrossPlatformInput;
 
 namespace UnitySampleAssets.Characters.ThirdPerson
 {
@@ -21,6 +21,8 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         private Vector3 move;
        
         private bool isMoving;
+
+        
 
        // private Vector3 sprint;
         //private bool isSprinting;

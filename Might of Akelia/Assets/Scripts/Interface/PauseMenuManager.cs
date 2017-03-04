@@ -16,12 +16,18 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         [SerializeField]
         ThirdPersonUserControl thirdPersonUserControl;
 
+        [SerializeField]
+        Camera playerCamera;
+        bool paused = false;
+        bool myCheck = false;
+      
         bool IsPauseMenuShowing
         {
             get { return pauseMenuPanel.activeSelf; }
         }
         void Start()
         {
+            paused = false;
             HidePauseMenu();
         }
 
@@ -34,45 +40,49 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
         // Update is called once per frame
         void Update()
-        {
+        {        
             HandleInput();
             UpdateCursor();
-            UpdateThirdPersonController();
+           // UpdateThirdPersonController();
         }
         void HandleInput()
         {
-            if (Input.GetButton("startButton"))
-            {
-                if (IsPauseMenuShowing)
-                {
+            //If bool is true and start button pressed. Pause game. Freeze time.
+            //Else will unpause and hide the pause menu.
+            if (Input.GetButton("startButton") && IsPauseMenuShowing)
+            {              
+                    Debug.Log("Closing Pause Menu");
                     HidePauseMenu();
-                }
-                else
-                {
-                    ShowPauseMenu();
-                }
+                    Time.timeScale = 1;
+                    paused = false;                                                               
+            }
+            else if (Input.GetButton("startButton") && !IsPauseMenuShowing)
+            {
+                ShowPauseMenu();
+                Time.timeScale = 0;
+                paused = true;
+                Debug.Log("Hiding Pause Menu");              
             }
         }
         private void ShowPauseMenu()
-        {
-           
+        {          
             pauseMenuPanel.SetActive(true);
             thirdPersonCharacter.enabled = false;
             thirdPersonUserControl.enabled = false;
         }
-        private void UpdateThirdPersonController()
-        {
-            if (IsPauseMenuShowing)
-            {
-                thirdPersonCharacter.enabled = false;
-                thirdPersonUserControl.enabled = false;
-            }
-            else
-            {
-                thirdPersonCharacter.enabled = true;
-                thirdPersonUserControl.enabled = true;
-            }
-        }
+        //private void UpdateThirdPersonController()
+        //{
+        //    if (IsPauseMenuShowing)
+        //    {
+        //        thirdPersonCharacter.enabled = false;
+        //        thirdPersonUserControl.enabled = false;
+        //    }
+        //    else
+        //    {
+        //        thirdPersonCharacter.enabled = true;
+        //        thirdPersonUserControl.enabled = true;
+        //    }
+        //}
         private void UpdateCursor()
         {
             if (IsPauseMenuShowing)
