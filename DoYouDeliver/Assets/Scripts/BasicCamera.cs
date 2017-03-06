@@ -99,18 +99,20 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 Transform objectHit = hit.transform;
                 objectLookedAt = hit.collider.gameObject.GetComponent<IActivatable>();
-                targetActivatable();
+              //  targetActivatable();
                 // Do something with the object that was hit by the raycast.
             }
+            
 
-            Debug.DrawLine(transform.position, endPoint, Color.red);
+
+            Debug.DrawLine(ray.origin, endPoint, Color.red);
         }
 
         private void targetActivatable()
         {
             if (gameObject.tag == "Enemy")
             {
-
+                Destroy(gameObject);
             }
             else if (gameObject.tag == "Item")
             {

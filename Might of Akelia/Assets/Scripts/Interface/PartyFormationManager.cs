@@ -19,8 +19,9 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         ThirdPersonCharacter thirdPersonCharacter;
         [SerializeField]
         ThirdPersonUserControl thirdPersonUserControl;
-     
-        float distance = 0f;
+        [SerializeField]
+        float speed = 1;
+        
         bool IsPartyFormationPanelShowing
         {
             get { return partyFormationPanel.activeSelf; }
@@ -34,9 +35,12 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             //InventoryObjectRepresented.DescriptionText
             HandleInput();
+            HandleLocation();
             //   UpdateThirdPersonController();
           //  UpdateDescriptionText(defaultDescriptionMessage);  //public const string defaultDescriptionMessage
-        }       
+        }
+
+
         private void HidePartyFormationPanel()
         {
             partyFormationPanel.SetActive(false);
@@ -72,10 +76,26 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         }
         void ShowPartyFormationPanel()
         {
+           
+           
             partyFormationPanel.SetActive(true);         
             partyFormationPanel.transform.position = thirdPersonCharacter.transform.position;
             thirdPersonCharacter.enabled = false;
             thirdPersonUserControl.enabled = false;            
-        }     
+            
+        }
+        private void HandleLocation()
+        {
+            //float distance of player and panels center
+            float distance = Vector3.Distance(thirdPersonCharacter.transform.position, transform.position);
+            //speed in which panel center moves towards player
+            float floatTowards = speed + distance * Time.deltaTime;
+            //if panel center and player are not aligned move panel towards player
+            if (partyFormationPanel.transform.position != thirdPersonCharacter.transform.position)
+            {
+       partyFormationPanel.transform.position = Vector3.MoveTowards(partyFormationPanel.transform.position, thirdPersonCharacter.transform.position, floatTowards);
+                
+            }
+        }
     }
 }

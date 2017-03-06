@@ -8,7 +8,13 @@ public class PopulateTargetList : MonoBehaviour {
 
     // Update is called once per frame
     [SerializeField]
-    Transform[] nearbyTargets = new Transform[10];
+    Transform[] nearbyTargets = new Transform[5];
+
+    [SerializeField]
+    GameObject mainCursor;
+
+    [SerializeField]
+    Transform subtargetCursor;
 
     SpriteRenderer spriteRenderer;
     Color color;
@@ -32,7 +38,6 @@ public class PopulateTargetList : MonoBehaviour {
                 addtoArray(other.transform);
                 Debug.Log("Enemy Target: " + other.transform.name);
                 //Red RGBA is (1, 0, 0, 1)
-
             }
          
             else if (other.transform.tag == "Hazard")
@@ -59,7 +64,7 @@ public class PopulateTargetList : MonoBehaviour {
                 //Solid blue. RGBA is (0, 0, 1, 1).
 
             }
-            else if (other.transform.tag == "Confirm")
+            else if (other.transform.tag == "Items")
             {
                 ConfirmTarget();
                 addtoArray(other.transform);
@@ -112,6 +117,15 @@ public class PopulateTargetList : MonoBehaviour {
 	}
     void addtoArray(Transform obj)
        {
-  //  nearbyTargets.Add(obj);
+        for (int i = 0; i < nearbyTargets.Length; i++)
+        {
+            obj = nearbyTargets[i];
+           
+
+          //  nearbyTargets[i] = Instantiate(subtargetCursor, new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z), transform.rotation) as GameObject;
+
+            // points[i] = Instantiate(point, new Vector3(x, y, 0), transform.rotation) as GameObject;
+        }                                          //obj.transform.position
     }
+    //  nearbyTargets.Add(obj);
 }

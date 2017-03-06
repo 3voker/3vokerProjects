@@ -11,18 +11,14 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
         public bool walkByDefault = false; // toggle for walking state
         public bool sprintByDefault = false; //NEW feature, toggle sprint feature
-        public bool lookInCameraDirection = true;// should the character be looking in the same direction that the camera is facing
-        
+        public bool lookInCameraDirection = true;// should the character be looking in the same direction that the camera is facing        
         // public int sprintSpeed; //sprint speed.
         private Vector3 lookPos; // The position that the character should be looking towards
         private ThirdPersonCharacter character; // A reference to the ThirdPersonCharacter on the object
         private Transform cam; // A reference to the main camera in the scenes transform
         private Vector3 camForward; // The current forward direction of the camera
-
-        private Vector3 move;
-       
+        private Vector3 move;    
         private bool isMoving;
-
         private bool jump;
         private bool doubleJump;
         // the world-relative desired move direction, calculated from the camForward and user input.
@@ -45,7 +41,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             // get the third person character ( this should never be null due to require component )
             character = GetComponent<ThirdPersonCharacter>();
         }
-
         void Update()
         {
 
@@ -60,7 +55,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             }
                 
         }
-
         // Fixed update is called in sync with physics
         private void FixedUpdate()
         {
@@ -88,9 +82,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 // we use world-relative directions in the case of no main camera
                 move = v * Vector3.forward + h * Vector3.right;
             }
-
            // if (move.magnitude > 1) move.Normalize();
-
 #if !MOBILE_INPUT
             // On non-mobile builds, walk/run speed is modified by a key press.
             bool walkToggle = (Input.GetButton("leftBumper"));
@@ -113,7 +105,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 Debug.Log("Not sprinting");
             }
 #endif
-
             // calculate the head look target position
             lookPos = lookInCameraDirection && cam != null 
                           ? transform.position + cam.forward*100

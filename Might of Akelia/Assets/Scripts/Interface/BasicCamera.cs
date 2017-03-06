@@ -29,6 +29,8 @@ namespace UnitySampleAssets.Characters.ThirdPerson
        // cam is used to manipulate any features exclusive to the Camera functions. 
         Camera cam;
         Vector3 offset;
+
+
         //This is for the 3rd person control clamp
         const float Y_ANGLE_MIN = 0.0F;
         const float Y_ANGLE_MAX = 50.0F;
@@ -68,6 +70,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 currentY = Mathf.Clamp(partyFormationPanel.transform.position.y + 4, Y_ANGLE_MIN, Y_ANGLE_MAX);
                 currentX = Mathf.Clamp(partyFormationPanel.transform.position.y + 4, X_ANGLE_MIN, X_ANGLE_MAX);
             }
+            
             if (!pauseMenuPanel.activeSelf)
             {
                 playerCamInputs();
@@ -88,18 +91,17 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             currentX += Input.GetAxis("rightJoystickHorizontal");
             currentY += Input.GetAxis("rightJoystickVertical");
-            currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);
+            currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);         
         }
 
-        //   cam = Camera.main;
-
+       
         private void checkForTargets()
         {           
             RaycastHit hit;
             Vector3 endPoint = transform.position + maxDistanceToActivateObjects * transform.forward;
-           // Ray ray = new Ray(transform.position, endPoint);
+          
             Ray ray = cam.ScreenPointToRay(new Vector3(250, 250, 0));
-            //  Ray ray = cam.ScreenPointToRay(new Vector3 (transform.position.x, camTransform.position.y, 0));
+           
             if (Physics.Raycast(ray, out hit))
             {
                 Transform objectHit = hit.transform;
@@ -159,18 +161,14 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             //   camTransform.forward = lookAt.transform.forward;
             //currentX = lookAt.position.x;
         }
-
         void LateUpdate()
         {
             Vector3 dir = new Vector3(0, 0, -distance);
             Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
             camTransform.position = lookAt.position + rotation * dir;
             camTransform.LookAt(lookAt.position);
-            //offset = transform.position - lookAt.position;
-
-
-
-            //  transform.position = target.transform.position + offset;
+            //If player camera input is 0,0 then maybe do something
+            //if (currentX == 0 && currentY == 0){}          
         }
     }
 }
