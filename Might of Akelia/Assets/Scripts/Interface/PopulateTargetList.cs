@@ -122,7 +122,7 @@ public class PopulateTargetList : MonoBehaviour {
             obj = nearbyTargets[i];
            
 
-          //  nearbyTargets[i] = Instantiate(subtargetCursor, new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z), transform.rotation) as GameObject;
+         nearbyTargets[i] = Instantiate(subtargetCursor, new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z), transform.rotation) as Transform;
 
             // points[i] = Instantiate(point, new Vector3(x, y, 0), transform.rotation) as GameObject;
         }                                          //obj.transform.position
