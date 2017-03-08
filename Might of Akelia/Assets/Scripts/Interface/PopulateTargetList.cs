@@ -11,10 +11,10 @@ public class PopulateTargetList : MonoBehaviour {
     Transform[] nearbyTargets = new Transform[5];
 
     [SerializeField]
-    GameObject mainCursor;
+    Transform mainTargetCursor;
 
     [SerializeField]
-    Transform subtargetCursor;
+    Transform subTargetCursor;
 
     SpriteRenderer spriteRenderer;
     Color color;
@@ -32,6 +32,11 @@ public class PopulateTargetList : MonoBehaviour {
         foreach (Transform nearbyTarget in nearbyTargets)
         {
             //case switch? or enumeration for later refactoring
+            if(nearbyTargets[0] != null)
+            {
+                nearbyTargets[0] = mainTargetCursor;
+                MainTarget();
+            }
             if (other.transform.tag == "Enemy")
             {
                 EnemyTarget();
@@ -85,6 +90,12 @@ public class PopulateTargetList : MonoBehaviour {
 
             //}
         }
+        
+    }
+
+    private void MainTarget()
+    {
+     
     }
 
     private void EnemyTarget()
@@ -122,8 +133,8 @@ public class PopulateTargetList : MonoBehaviour {
             obj = nearbyTargets[i];
            
 
-         nearbyTargets[i] = Instantiate(subtargetCursor, new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z), transform.rotation) as Transform;
-
+         nearbyTargets[i] = Instantiate(subTargetCursor, new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z), transform.rotation) as Transform;
+        
             // points[i] = Instantiate(point, new Vector3(x, y, 0), transform.rotation) as GameObject;
         }                                          //obj.transform.position
     }
