@@ -46,12 +46,12 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
             if (!jump)
             {
-                jump = (Input.GetButton("aButton"));
+                jump = (Input.GetButton("Jump"));
             }
 
             if(jump && !doubleJump)
             {
-                doubleJump = (Input.GetButton("aButton"));
+                doubleJump = (Input.GetButton("Jump"));
             }
                 
         }
@@ -102,7 +102,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             }
             else
             {
-                Debug.Log("Not sprinting");
+               // Debug.Log("Not sprinting");
             }
 #endif
             // calculate the head look target position
