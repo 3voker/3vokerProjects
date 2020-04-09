@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-namespace UnitySampleAssets.Characters.ThirdPerson {
+
     [RequireComponent(typeof(Toggle))]
     public class InventoryMenuItem : MonoBehaviour
     {
@@ -39,7 +39,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson {
 
             try
             {
-                inventoryManager = GameObject.Find("Inventory Manager").GetComponent<InventoryManager>();
+                inventoryManager = GameObject.Find("Game Manager Canvas").GetComponent<InventoryManager>();
             }
             catch (System.Exception)
             {
@@ -49,4 +49,3 @@ namespace UnitySampleAssets.Characters.ThirdPerson {
             }
         }      
     }
-}

@@ -1,13 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BaseCharacterClass
-{
 
+
+public class BaseCharacterClass : MonoBehaviour
+{
+    //FrameWork Notes: Main job, Subjob, Race, and Level determine players overall stats. 
+    //Each variation of the 4 will add or subtract the stats for a specific value. 
+    //Example: Minotaur, Zergmeister, Guardian, Level 20. HP: 680, STR: 33, VIT: 35, AGI: 29, INT: 18. etc.
     // Use this for initialization
     private string characterClassName;
     private string characterClassDescription;
-
 
     //8 stats for 8 elements // can start with 5 basic jobs.
     // Strength - Determines physical / magical attack power vs opponents physical / magical defense
@@ -72,7 +75,6 @@ public class BaseCharacterClass
         get { return characterClassDescription; }
         set { characterClassDescription = value; }
     }
-
     public int Strength
     {
         get { return strength; }

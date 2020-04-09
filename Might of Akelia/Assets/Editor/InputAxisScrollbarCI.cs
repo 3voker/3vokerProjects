@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEditor.UI;
+using UnityStandardAssets.CrossPlatformInput;
 
 namespace UnitySampleAssets.CrossPlatformInput.Inspector
 {

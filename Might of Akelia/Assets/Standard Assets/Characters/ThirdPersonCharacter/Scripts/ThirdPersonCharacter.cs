@@ -42,6 +42,8 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         public LayerMask crouchCheckMask;
 
         private bool onGround; // Is the character on the ground
+        private bool isHurt;
+        private bool isDead;
         private Vector3 currentLookPos; // The current position where the character is looking
         private float originalHeight; // Used for tracking the original height of the characters capsule collider
         private Animator animator; // The animator for the character
@@ -60,6 +62,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         private IComparer rayHitComparer;
         public float lookBlendTime;
         public float lookWeight;
+        bool okToDoubleJump;
 
         Rigidbody rigidBody;
 
@@ -85,11 +88,8 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 originalHeight = capsule.height;
                 capsule.center = Vector3.up*originalHeight*half;
             }
-
             rayHitComparer = new RayHitComparer();
-
             SetUpAnimator();
-
             // give the look position a default in case the character is not under control
             currentLookPos = Camera.main.transform.position;
         }
@@ -154,13 +154,9 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 HandleAirborneVelocities();
             }
-
             UpdateAnimator(); // send input and other state parameters to the animator
-
             // reassign velocity, since it will have been modified by the above functions.
             rigidBody.velocity = velocity;
-
-
         }
 
         private void ConvertMoveInput()
@@ -177,7 +173,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             // automatically turn to face camera direction,
             // when not moving, and beyond the specified angle threshold
-            if (Mathf.Abs(forwardAmount) < .01f)
+            if (Mathf.Abs(forwardAmount) < .75f) //.01f
             {
                 Vector3 lookDelta = transform.InverseTransformDirection(currentLookPos - transform.position);
                 float lookAngle = Mathf.Atan2(lookDelta.x, lookDelta.z)*Mathf.Rad2Deg;
@@ -215,8 +211,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 capsule.center = Vector3.MoveTowards(capsule.center,
                                                      Vector3.up*originalHeight*advancedSettings.crouchHeightFactor*half,
                                                      Time.deltaTime*2);
-            }
-                // ... everything else 
+            } // ... everything else 
             else if (capsule.height != originalHeight && capsule.center != Vector3.up*originalHeight*half)
             {
                 capsule.height = Mathf.MoveTowards(capsule.height, originalHeight, Time.deltaTime*4);
@@ -242,6 +237,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 onGround = false;
                 rigidBody.useGravity = true;
+               
                 foreach (var hit in hits)
                 {
                     // check whether we hit a non-trigger collider (and not the character itself)
@@ -298,7 +294,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
 
         private void HandleGroundedVelocities()
         {
-
+            okToDoubleJump= Time.time > lastJumpTime + advancedSettings.doubleJumpDelayTime;
             velocity.y = 0;
 
             if (moveInput.magnitude == 0)
@@ -309,12 +305,10 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             }
             // check whether conditions are right to allow a jump:
             bool animationGrounded = animator.GetCurrentAnimatorStateInfo(0).IsName("Grounded");
-            bool okToRepeatJump = Time.time > lastAirTime + advancedSettings.jumpRepeatDelayTime;
+            //bool okToRepeatJump = Time.time > lastAirTime + advancedSettings.jumpRepeatDelayTime;
 
-            //NEW Create different condition that doesn't rely on time/grounded variable
-            bool okToDoubleJump = Time.time > lastJumpTime + advancedSettings.doubleJumpDelayTime; ;
-
-            if (jumpInput && !crouchInput && okToRepeatJump && animationGrounded)
+            //NEW Create different condition that doesn't rely on time/grounded variable         
+            if (jumpInput && !crouchInput && doubleJumpInput && animationGrounded)
             {
                 // jump!
                 if (sprintInput)
@@ -333,19 +327,19 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             }
             if (doubleJumpInput && !onGround && okToDoubleJump)
             {
+                {
+                    rigidBody.useGravity = false;
+                    airSpeed *= 1;
+                    jumpPower *= 1;
+                    velocity = moveInput * airSpeed;
+                    velocity.y += doubleJumpPower;
+                }
                 if (sprintInput)
                 {
                     airSpeed *= 6;
                     jumpPower *= 2;
                 }
-                else
-                {
-                    airSpeed *= 1;
-                    jumpPower *= 1;
-                    velocity = moveInput * airSpeed;
-                    velocity.y = doubleJumpPower;
-                }
-            }          
+            }
         }
 
         private void HandleAirborneVelocities()
@@ -378,7 +372,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 animator.SetFloat("Jump", velocity.y);
             }
-
             // calculate which leg is behind, so as to leave that leg trailing in the jump animation
             // (This code is reliant on the specific run cycle offset in our animations,
             // and assumes one leg passes the other at the normalized clip times of 0.0 and 0.5)
@@ -390,7 +383,6 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             {
                 animator.SetFloat("JumpLeg", jumpLeg);
             }
-
             // the anim speed multiplier allows the overall speed of walking/running to be tweaked in the inspector,
             // which affects the movement speed because of the root motion.
             if (onGround && moveInput.magnitude > 0)
@@ -403,19 +395,17 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 animator.speed = 1;
             }
         }
-
-
         private void OnAnimatorIK(int layerIndex)
         {
             // we set the weight so most of the look-turn is done with the head, not the body.
             animator.SetLookAtWeight(lookWeight, 0.2f, 2.5f);
 
             // if a transform is assigned as a look target, it overrides the vector lookPos value
+
             if (lookTarget != null)
             {
                 currentLookPos = lookTarget.position;
             }
-
             // Used for the head look feature.
             animator.SetLookAtPosition(currentLookPos);
         }
@@ -453,13 +443,10 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 rigidBody.velocity = v;
             }
         }
-
-
         void OnDisable()
         {
             lookWeight = 0f;
         }
-
         //used for comparing distances
         private class RayHitComparer : IComparer
         {

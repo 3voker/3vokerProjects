@@ -11,10 +11,15 @@ public class PathFollower : MonoBehaviour {
     [SerializeField]
     Transform pathParent;
 
+    //Node to reach next
     Transform targetPoint;
     Vector3 distance;
     Quaternion newRotate;
     int index; 
+
+    
+
+
 
     void OnDrawGizmos()
     {
@@ -46,10 +51,11 @@ public class PathFollower : MonoBehaviour {
     }
     void rotate()
     {
-        distance = transform.position - targetPoint.position;
-        newRotate = Quaternion.LookRotation(distance, transform.forward);
+        distance = transform.position - targetPoint.position; 
+        newRotate = Quaternion.LookRotation(distance, transform.forward); //newRotate = Quaternion.LookRotation(distance, transform.forward);
         newRotate.x = 0;
         newRotate.y = 0;
         transform.rotation = Quaternion.Lerp(transform.rotation, newRotate, speedRotate * Time.deltaTime);
     }
+
 }

@@ -25,7 +25,7 @@ using UnityEngine.SceneManagement;
         public void Unload(string sceneName)
         {
             if (SceneManager.GetSceneByName(sceneName).isLoaded)
-                SceneManager.UnloadScene(sceneName);
+                SceneManager.UnloadSceneAsync(sceneName);
         }
 
     }

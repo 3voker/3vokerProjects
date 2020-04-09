@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnitySampleAssets.CrossPlatformInput;
+using UnityStandardAssets.CrossPlatformInput;
 #if UNITY_EDITOR
 using UnityEditor;
 
@@ -23,6 +23,8 @@ namespace UnitySampleAssets.Cameras
         [SerializeField] private float tiltMin = 45f; // The minimum value of the x axis rotation of the pivot.
         [SerializeField] private bool lockCursor = false; // Whether the cursor should be hidden and locked.
         [SerializeField] private bool verticalAutoReturn = false;// set wether or not the vertical axis should auto return
+        [SerializeField]
+        float distanceFromPlayerBuffer;
 
         private float lookAngle; // The rig's y axis rotation.
         private float tiltAngle; // The pivot's x axis rotation.
@@ -32,11 +34,35 @@ namespace UnitySampleAssets.Cameras
         private float smoothXvelocity = 0;
         private float smoothYvelocity = 0;
 
+        private GameObject playerTarget;
+        public GameObject tempTarget;
+
+        /// <summary>
+        /// Refactor to change to state machine(The good State) 
+        /// </summary>
+        /// <param name="other"></param>
+        private void OnTriggerStay(Collider other)
+        {
+            if(other.tag == "Enemy")
+            {
+                Debug.Log("FreeLookCam: Enemy Target in collider");
+                tempTarget = GameObject.FindGameObjectWithTag("Enemy");
+                FindAndTargetObject();
+            }
+        }
+        private void OnTriggerExit(Collider other)
+        {
+            if(other.tag == "Enemy")
+            {
+                tempTarget = null;      
+            }
+        }
         protected override void Awake()
         {
             base.Awake();
             // Lock or unlock the cursor.
-            Screen.lockCursor = lockCursor;
+            Cursor.lockState = CursorLockMode.Locked;
+           
         }
 
 
@@ -45,19 +71,44 @@ namespace UnitySampleAssets.Cameras
             HandleRotationMovement();
             if (lockCursor && Input.GetMouseButtonUp(0))
             {
-                Screen.lockCursor = lockCursor;
+                Cursor.lockState = CursorLockMode.Locked;
             }
         }
 
         private void OnDisable()
         {
-            Screen.lockCursor = false;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         protected override void FollowTarget(float deltaTime)
         {
             // Move the rig towards target position.
-            transform.position = Vector3.Lerp(transform.position, target.position, deltaTime*moveSpeed);
+            if(target.position != null)
+            {
+                transform.position = Vector3.Lerp(transform.position, target.position, deltaTime * moveSpeed);
+                if (this.transform.position.z < target.position.z + distanceFromPlayerBuffer)
+                {
+                    transform.position = target.position;
+                }
+            }
+            if((Input.GetAxisRaw("rightTrigger") != 0))
+            {
+                if(tempTarget != null)
+                {
+                    FindAndTargetObject();
+                    pivot = playerTarget.transform;
+                  
+                }
+                if (this.transform.position.z < target.position.z + distanceFromPlayerBuffer)
+                {
+                    transform.position = target.position;
+                }
+            }
+            else
+            {
+                FindAndTargetPlayer();
+            }
+
         }
 
         private void HandleRotationMovement()
@@ -103,5 +154,23 @@ namespace UnitySampleAssets.Cameras
             pivot.localRotation = Quaternion.Euler(tiltAngle, 0f, 0f);
 
         }
+        //public override void SetTarget(Transform newTransform)
+        //{
+        //    playerTarget = GameObject.FindGameObjectWithTag("Player");
+        //    if (playerTarget != null && tempTarget != null)
+        //    {
+        //        if (tempTarget != null)
+        //        {
+        //            tempTarget.transform.localPosition = newTransform.localPosition - playerTarget.transform.localPosition;
+        //        }
+        //        base.SetTarget(newTransform);
+        //    }
+        //    else
+        //    {
+        //        FindAndTargetPlayer();
+        //        base.SetTarget(newTransform);
+        //    }
+           
+        //}
     }
 }

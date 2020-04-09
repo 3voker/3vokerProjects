@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-16"?>
+<CharacterDialogue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Language>English</Language>
+  <Name>Example NPC</Name>
+  <Nodes>
+    <Node>
+      <ID>0</ID>
+      <Title>Introduction</Title>
+      <Text>Hey! This is a test!</Text>
+      <Options>
+        <Option>
+          <text>Oh! I see.</text>
+          <destinationNodeID>1</destinationNodeID>
+          <barkNum>1</barkNum>
+        </Option>
+        <Option>
+          <text>Makes sense.</text>
+          <destinationNodeID>2</destinationNodeID>
+          <barkNum>2</barkNum>
+        </Option>
+      </Options>
+    </Node>
+    <Node>
+      <ID>1</ID>
+      <Title>Oh! Response.</Title>
+      <Text>Yeah, so that's basically it, at least for me.</Text>
+      <Options>
+        <Option>
+          <text>Well, fuck me, then.</text>
+          <destinationNodeID>32</destinationNodeID>
+          <barkNum>4</barkNum>
+        </Option>
+      </Options>
+    </Node>
+    <Node>
+      <ID>2</ID>
+      <Title>Makes sense response</Title>
+      <Text>Doesn't it? Life usually doesn't, but this does. But anyways, that's it.</Text>
+      <Options>
+        <Option>
+          <text>Okay, damn.</text>
+          <destinationNodeID>32</destinationNodeID>
+          <barkNum>4</barkNum>
+        </Option>
+      </Options>
+    </Node>
+  </Nodes>
+</CharacterDialogue>

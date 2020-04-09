@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnitySampleAssets.Utility;
+using UnityStandardAssets.Utility;
 
 namespace UnitySampleAssets.Characters.FirstPerson
 {

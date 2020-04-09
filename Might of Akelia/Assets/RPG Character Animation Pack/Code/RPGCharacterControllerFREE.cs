@@ -7,626 +7,638 @@ public enum Weapon
 	UNARMED = 0,
 	RELAX = 8
 }
-	
-public class RPGCharacterControllerFREE : MonoBehaviour 
+
+public class RPGCharacterControllerFREE : MonoBehaviour
 {
-	#region Variables
+    #region Variables
 
-	//Components
-	Rigidbody rb;
-	protected Animator animator;
-	public GameObject target;
-	private Vector3 targetDashDirection;
-	public Camera sceneCamera;
+    //Components
+    Rigidbody rb;
+    protected Animator animator;
+    public GameObject target;
+    private Vector3 targetDashDirection;
+    public Camera sceneCamera;
 
-	//jumping variables
-	public float gravity = -9.8f;
-	bool canJump;
-	bool isJumping = false;
-	bool isGrounded;
-	public float jumpSpeed = 12;
-	public float doublejumpSpeed = 12;
-	bool doublejumping = true;
-	bool canDoubleJump = false;
-	bool isDoubleJumping = false;
-	bool doublejumped = false;
-	bool isFalling;
-	bool startFall;
-	float fallingVelocity = -1f;
+    //jumping variables
+    public float gravity = -9.8f;
+    bool canJump;
+    bool isJumping = false;
+    bool isGrounded;
+    public float jumpSpeed = 12;
+    public float doublejumpSpeed = 12;
+    bool doublejumping = true;
+    bool canDoubleJump = false;
+    bool isDoubleJumping = false;
+    bool doublejumped = false;
+    bool isFalling;
+    bool startFall;
+    float fallingVelocity = -1f;
 
-	// Used for continuing momentum while in air
-	public float inAirSpeed = 8f;
-	float maxVelocity = 2f;
-	float minVelocity = -2f;
+    // Used for continuing momentum while in air
+    public float inAirSpeed = 8f;
+    float maxVelocity = 2f;
+    float minVelocity = -2f;
 
-	//rolling variables
-	public float rollSpeed = 8;
-	bool isRolling = false;
-	public float rollduration;
+    //rolling variables
+    public float rollSpeed = 8;
+    bool isRolling = false;
+    public float rollduration;
 
-	//movement variables
-	bool canMove = true;
-	public float walkSpeed = 1.35f;
-	float moveSpeed;
-	public float runSpeed = 6f;
-	float rotationSpeed = 40f;
-  
-	float x;
-	float z;
-	float dv;
-	float dh;
-	Vector3 inputVec;
-	Vector3 newVelocity;
+    //movement variables
+    bool canMove = true;
+    public float walkSpeed = 1.35f;
+    float moveSpeed;
+    public float runSpeed = 6f;
+    float rotationSpeed = 40f;
 
-	//Weapon and Shield
-	private Weapon weapon;
-	int rightWeapon = 0;
-	int leftWeapon = 0;
-	bool isRelax = false;
+    float x;
+    float z;
+    float dv;
+    float dh;
+    Vector3 inputVec;
+    Vector3 newVelocity;
 
-	//isStrafing/action variables
-	bool canAction = true;
-	bool isStrafing = false;
-	bool isDead = false;
-	bool isBlocking = false;
-	public float knockbackMultiplier = 1f;
-	bool isKnockback;
+    //Weapon and Shield
+    private Weapon weapon;
+    int rightWeapon = 0;
+    int leftWeapon = 0;
+    bool isRelax = false;
 
-	#endregion
+    //isStrafing/action variables
+    bool canAction = true;
+    bool isStrafing = false;
+    bool isDead = false;
+    bool isBlocking = false;
+    public float knockbackMultiplier = 1f;
+    bool isKnockback;
 
-	#region Initialization
+    #endregion
 
-	void Start() 
-	{
-		//set the animator component
-		animator = GetComponentInChildren<Animator>();
-		rb = GetComponent<Rigidbody>();
-	}
+    #region Initialization
 
-	#endregion
-	
-	#region UpdateAndInput
-	
-	void Update()
-	{
-		
-		//make sure there is animator on character
-		if(animator)
-		{
-			if(canMove && !isBlocking && !isDead)
-			{
-				CameraRelativeMovement();
-			} 
-			Rolling();
-			Jumping();
-			if(Input.GetButtonDown("LightHit") && canAction && isGrounded && !isBlocking)
-			{
-				GetHit();
-			}
-			if(Input.GetButtonDown("Death") && canAction && isGrounded && !isBlocking)
-			{
-				if(!isDead)
-				{
-					StartCoroutine(_Death());
-				} 
-				else
-				{
-					StartCoroutine(_Revive());
-				}
-			}
-			if(Input.GetButtonDown("AttackL") && canAction && isGrounded && !isBlocking)
-			{
-				Attack(1);
-			}
-			if(Input.GetButtonDown("AttackR") && canAction && isGrounded && !isBlocking)
-			{
-				Attack(2);
-			}
-			if(Input.GetButtonDown("CastL") && canAction && isGrounded && !isBlocking && !isStrafing)
-			{
-				AttackKick(1);
-			}
-			if(Input.GetButtonDown("CastR") && canAction && isGrounded && !isBlocking && !isStrafing)
-			{
-				AttackKick(2);
-			}
-			//if strafing
-			if(Input.GetKey(KeyCode.LeftShift) || Input.GetAxisRaw("TargetBlock") > .1 && canAction)
-			{  
-				isStrafing = true;
-				animator.SetBool("Strafing", true);
-				if(Input.GetButtonDown("CastL") && canAction && isGrounded && !isBlocking)
-				{
-					CastAttack(1);
-				}
-				if(Input.GetButtonDown("CastR") && canAction && isGrounded && !isBlocking)
-				{
-					CastAttack(2);
-				}
-			}
-			else
-			{
-				isStrafing = false;
-				animator.SetBool("Strafing", false);
-			}
-		}
-		else
-		{
-			Debug.Log("ERROR: There is no animator for character.");
-		}
-	}
-	
-	#endregion
+    void Start()
+    {
+        //set the animator component
+        animator = GetComponentInChildren<Animator>();
+        rb = GetComponent<Rigidbody>();
+    }
 
-	#region Fixed/Late Updates
-	
-	void FixedUpdate()
-	{
-		CheckForGrounded();
-		//apply gravity force
-		rb.AddForce(0, gravity, 0, ForceMode.Acceleration);
-		AirControl();
-		//check if character can move
-		if(canMove && !isBlocking)
-		{
-			moveSpeed = UpdateMovement();  
-		}
-		//check if falling
-		if(rb.velocity.y < fallingVelocity)
-		{
-			isFalling = true;
-			animator.SetInteger("Jumping", 2);
-			canJump = false;
-		} 
-		else
-		{
-			isFalling = false;
-		}
-	}
+    #endregion
 
-	//get velocity of rigid body and pass the value to the animator to control the animations
-	void LateUpdate()
-	{
-		//Get local velocity of charcter
-		float velocityXel = transform.InverseTransformDirection(rb.velocity).x;
-		float velocityZel = transform.InverseTransformDirection(rb.velocity).z;
-		//Update animator with movement values
-		animator.SetFloat("Velocity X", velocityXel / runSpeed);
-		animator.SetFloat("Velocity Z", velocityZel / runSpeed);
-		//if character is alive and can move, set our animator
-		if(!isDead && canMove)
-		{
-			if(moveSpeed > 0)
-			{
-				animator.SetBool("Moving", true);
-			}
-			else
-			{
-				animator.SetBool("Moving", false);
-			}
-		}
-	}
-	
-	#endregion
+    #region UpdateAndInput
 
-	#region UpdateMovement
+    void Update()
+    {
+        //make sure there is animator on character
+        //if(Input.GetButton("Start"))
+        //{
+        //    canAction = true;
+        //}
+        if (animator)
+        {
+            if (canMove && !isBlocking && !isDead)
+            {
+                CameraRelativeMovement();
+            }
+            Rolling();
+            Jumping();
+            if (Input.GetButton("Select") && canAction && isGrounded && !isBlocking)
+            {
+                GetHit();
+            }
+            if (Input.GetButton("Start") && canAction && isGrounded && !isBlocking)
+            {
+                //canAction = false;
+                if (!isDead)
+                {
+                    StartCoroutine(_Death());
+                }
+                else
+                {
+                    StartCoroutine(_Revive());
+                }
+            }
 
-	void CameraRelativeMovement(){
-		float inputDashVertical = Input.GetAxisRaw("DashVertical");
-		float inputDashHorizontal = Input.GetAxisRaw("DashHorizontal");
-		float inputHorizontal = Input.GetAxisRaw("Horizontal");
-		float inputVertical = Input.GetAxisRaw("Vertical");
+            if (Input.GetButton("Fire1") && canAction && isGrounded && !isBlocking)
+            {
+                Attack(1);
+            }
+            if (Input.GetButton("yButton") && canAction && isGrounded && !isBlocking)
+            {
+                Attack(2);
+            }
+            if (Input.GetButton("bButton") && canAction && isGrounded && !isBlocking && !isStrafing)
+            {
+                AttackKick(1);
+            }
+            if (Input.GetAxisRaw("rightTrigger") != 0 && canAction && isGrounded && !isBlocking && !isStrafing)
+            {
+                AttackKick(2);
+            }
+            //if strafing
+            if (Input.GetKey(KeyCode.LeftShift) || (Input.GetAxisRaw("leftTrigger") != 0) && canAction)
+            {
+                isStrafing = true;
+                animator.SetBool("Strafing", true);
+                if (Input.GetAxisRaw("Fire1") != 0 && canAction && isGrounded && !isBlocking)
+                {
+                    CastAttack(1);
+                }
+                if (Input.GetAxisRaw("rightTrigger") != 0 && canAction && isGrounded && !isBlocking)
+                {
+                    CastAttack(2);
+                }
+            }
+            else
+            {
+                isStrafing = false;
+                animator.SetBool("Strafing", false);
+            }
+        }
+        else
+        {
+            Debug.Log("ERROR: There is no animator for character.");
+        }
+    }
+    #endregion
+    #region Fixed/Late Updates	
+    void FixedUpdate()
+    {
+        CheckForGrounded();
+        //apply gravity force
+        rb.AddForce(0, gravity, 0, ForceMode.Acceleration);
+        AirControl();
+        //check if character can move
+        if (canMove && !isBlocking)
+        {
+            moveSpeed = UpdateMovement();
+        }
+        //check if falling
+        if (rb.velocity.y < fallingVelocity)
+        {
+            isFalling = true;
+            animator.SetInteger("Jumping", 2);
+            canJump = false;
+        }
+        else
+        {
+            isFalling = false;
+        }
+    }
+    //get velocity of rigid body and pass the value to the animator to control the animations
+    void LateUpdate()
+    {
+        //Get local velocity of charcter
+        float velocityXel = transform.InverseTransformDirection(rb.velocity).x;
+        float velocityZel = transform.InverseTransformDirection(rb.velocity).z;
+        //Update animator with movement values
+        animator.SetFloat("Velocity X", velocityXel / runSpeed);
+        animator.SetFloat("Velocity Z", velocityZel / runSpeed);
+        //if character is alive and can move, set our animator
+        if (!isDead && canMove)
+        {
+            if (moveSpeed > 0)
+            {
+                animator.SetBool("Moving", true);
+            }
+            else
+            {
+                animator.SetBool("Moving", false);
+            }
+        }
+    }
 
-		//converts control input vectors into camera facing vectors
-		Transform cameraTransform = sceneCamera.transform;
-		//Forward vector relative to the camera along the x-z plane   
-		Vector3 forward = cameraTransform.TransformDirection(Vector3.forward);
-		forward.y = 0;
-		forward = forward.normalized;
-		//Right vector relative to the camera always orthogonal to the forward vector
-		Vector3 right = new Vector3(forward.z, 0, -forward.x);
-		//directional inputs
-		dv = inputDashVertical;
-		dh = inputDashHorizontal;
-		if(!isRolling)
-		{
-			targetDashDirection = dh * right + dv * -forward;
-		}
-		x = inputHorizontal;
-		z = inputVertical;
-		inputVec = x * right + z * forward;
-	}
+    #endregion
+    #region UpdateMovement
+    void CameraRelativeMovement() {
+        float inputDashVertical = Input.GetAxis("leftJoystickVertical");
+        float inputDashHorizontal = Input.GetAxis("leftJoystickHorizontal");
+        float inputHorizontal = Input.GetAxis("leftJoystickHorizontal");
+        float inputVertical = Input.GetAxis("leftJoystickVertical");
 
-	//rotate character towards direction moved
-	void RotateTowardsMovementDir()
-	{
-		if(inputVec != Vector3.zero && !isStrafing && !isRolling && !isBlocking)
-		{
-			transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(inputVec), Time.deltaTime * rotationSpeed);
-		}
-	}
+        //converts control input vectors into camera facing vectors
+        Transform cameraTransform = sceneCamera.transform;
+        //Forward vector relative to the camera along the x-z plane   
+        Vector3 forward = cameraTransform.TransformDirection(Vector3.forward);
+        forward.y = 0;
+        forward = forward.normalized;
+        //Right vector relative to the camera always orthogonal to the forward vector
+        Vector3 right = new Vector3(forward.z, 0, -forward.x);
+        //directional inputs
+        dv = inputDashVertical;
+        dh = inputDashHorizontal;
+        if (!isRolling)
+        {
+            targetDashDirection = dh * right + dv * -forward;
+        }
+        x = inputHorizontal;
+        z = inputVertical;
+        inputVec = x * right + z * forward;
+    }
+    //rotate character towards direction moved
+    void RotateTowardsMovementDir()
+    {
+        if (inputVec != Vector3.zero && !isStrafing && !isRolling && !isBlocking)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(inputVec), Time.deltaTime * rotationSpeed);
+        }
+    }
+    float UpdateMovement()
+    {
+        CameraRelativeMovement();
+        Vector3 motion = inputVec;
+        if (isGrounded)
+        {
+            //reduce input for diagonal movement
+            if (motion.magnitude > 1)
+            {
+                motion.Normalize();
+            }
+            if (canMove && !isBlocking)
+            {
+                //set speed by walking / running
+                if (isStrafing)
+                {
+                    newVelocity = motion * walkSpeed;
+                }
+                else
+                {
+                    newVelocity = motion * runSpeed;
+                }
+                //if rolling use rolling speed and direction
+                if (isRolling)
+                {
+                    //force the dash movement to 1
+                    targetDashDirection.Normalize();
+                    newVelocity = rollSpeed * targetDashDirection;
+                }
+            }
+        }
+        else
+        {
+            //if we are falling use momentum
+            newVelocity = rb.velocity;
+        }
+        if (!isStrafing || !canMove)
+        {
+            RotateTowardsMovementDir();
+        }
+        if (isStrafing && !isRelax)
+        {
+            //make character point at target
+            Quaternion targetRotation;
+            Vector3 targetPos = target.transform.position;
+            targetRotation = Quaternion.LookRotation(targetPos - new Vector3(transform.position.x, 0, transform.position.z));
+            transform.eulerAngles = Vector3.up * Mathf.MoveTowardsAngle(transform.eulerAngles.y, targetRotation.eulerAngles.y, (rotationSpeed * Time.deltaTime) * rotationSpeed);
+        }
+        newVelocity.y = rb.velocity.y;
+        rb.velocity = newVelocity;
+        //return a movement value for the animator
+        return inputVec.magnitude;
+    }
+    #endregion
+    #region Jumping
 
-	float UpdateMovement()
-	{
-		CameraRelativeMovement();  
-		Vector3 motion = inputVec;
-		if(isGrounded)
-		{
-			//reduce input for diagonal movement
-			if(motion.magnitude > 1)
-			{
-				motion.Normalize();
-			}
-			if(canMove && !isBlocking)
-			{
-				//set speed by walking / running
-				if(isStrafing)
-				{
-					newVelocity = motion * walkSpeed;
-				}
-				else
-				{
-					newVelocity = motion * runSpeed;
-				}
-				//if rolling use rolling speed and direction
-				if(isRolling)
-				{
-					//force the dash movement to 1
-					targetDashDirection.Normalize();
-					newVelocity = rollSpeed * targetDashDirection;
-				}
-			}
-		}
-		else
-		{
-			//if we are falling use momentum
-			newVelocity = rb.velocity;
-		}
-		if(!isStrafing || !canMove)
-		{
-			RotateTowardsMovementDir();
-		}
-		if(isStrafing && !isRelax)
-		{
-			//make character point at target
-			Quaternion targetRotation;
-			Vector3 targetPos = target.transform.position;
-      		targetRotation = Quaternion.LookRotation(targetPos - new Vector3(transform.position.x,0,transform.position.z));
-			transform.eulerAngles = Vector3.up * Mathf.MoveTowardsAngle(transform.eulerAngles.y,targetRotation.eulerAngles.y,(rotationSpeed * Time.deltaTime) * rotationSpeed);
-		}
-		newVelocity.y = rb.velocity.y;
-		rb.velocity = newVelocity;
-		//return a movement value for the animator
-		return inputVec.magnitude;
-	}
+    //checks if character is within a certain distance from the ground, and markes it IsGrounded
+    void CheckForGrounded()
+    {
+        float distanceToGround;
+        float threshold = .45f;
+        RaycastHit hit;
+        Vector3 offset = new Vector3(0, .4f, 0);
+        if (Physics.Raycast((transform.position + offset), -Vector3.up, out hit, 100f))
+        {
+            distanceToGround = hit.distance;
+            if (distanceToGround < threshold)
+            {
+                isGrounded = true;
+                canJump = true;
+                startFall = false;
+                doublejumped = false;
+                canDoubleJump = false;
+                isFalling = false;
+                if (!isJumping)
+                {
+                    animator.SetInteger("Jumping", 0);
+                }
+            }
+            else
+            {
+                isGrounded = false;
+            }
+        }
+    }
+    void Jumping()
+    {
+        if (isGrounded)
+        {
+            if (canJump && Input.GetButton("Jump"))
+            {
+                StartCoroutine(_Jump());
+            }
+        }
+        else
+        {
+            canDoubleJump = true;
+            canJump = false;
+            if (isFalling)
+            {
+                //set the animation back to falling
+                animator.SetInteger("Jumping", 2);
+                //prevent from going into land animation while in air
+                if (!startFall)
+                {
+                    animator.SetTrigger("JumpTrigger");
+                    startFall = true;
+                }
+            }
+            if (canDoubleJump && doublejumping && Input.GetButton("Jump") && !doublejumped && isFalling)
+            {
+                // Apply the current movement to launch velocity
+                rb.velocity += doublejumpSpeed * Vector3.up;
+                animator.SetInteger("Jumping", 3);
+                doublejumped = true;
+            }
+        }
+    }
 
-	#endregion
+    IEnumerator _Jump()
+    {
+        isJumping = true;
+        animator.SetInteger("Jumping", 1);
+        animator.SetTrigger("JumpTrigger");
+        // Apply the current movement to launch velocity
+        rb.velocity += jumpSpeed * Vector3.up;
+        canJump = false;
+        yield return new WaitForSeconds(.5f);
+        isJumping = false;
+    }
 
-	#region Jumping
+    void AirControl()
+    {
+        CameraRelativeMovement();
+        if (!isGrounded)
+        {
+            #region air variables
+            Vector3 motion = inputVec;
+            bool airDash = Input.GetButton("Jump");
+           // bool canAirDashed = true;
+            float velocityX = 0;
+            float velocityZ = 0;        
+            motion *= (Mathf.Abs(inputVec.x) == 1 && Mathf.Abs(inputVec.z) == 1) ? 0.7f : 1;
+            rb.AddForce(motion * inAirSpeed, ForceMode.Acceleration);
+            //limit the amount of velocity we can achieve          
+            #endregion
+           
+            if (rb.velocity.x > maxVelocity)
+            {
+                velocityX = GetComponent<Rigidbody>().velocity.x - maxVelocity;
+                if (velocityX < 0)
+                {
+                    velocityX = 0;
+                }
+                rb.AddForce(new Vector3(-velocityX, 0, 0), ForceMode.Acceleration);
+            }
+            if (rb.velocity.x < minVelocity)
+            {
+                velocityX = rb.velocity.x - minVelocity;
+                if (velocityX > 0)
+                {
+                    velocityX = 0;
+                }
+                rb.AddForce(new Vector3(-velocityX, 0, 0), ForceMode.Acceleration);
+            }
+            if (rb.velocity.z > maxVelocity)
+            {
+                velocityZ = rb.velocity.z - maxVelocity;
+                if (velocityZ < 0)
+                {
+                    velocityZ = 0;
+                }
+                rb.AddForce(new Vector3(0, 0, -velocityZ), ForceMode.Acceleration);
+            }
+            if (rb.velocity.z < minVelocity)
+            {
+                velocityZ = rb.velocity.z - minVelocity;
+                if (velocityZ > 0)
+                {
+                    velocityZ = 0;
+                }
+                rb.AddForce(new Vector3(0, 0, -velocityZ), ForceMode.Acceleration);
+            }
+        }
+    }
 
-	//checks if character is within a certain distance from the ground, and markes it IsGrounded
-	void CheckForGrounded()
-	{
-		float distanceToGround;
-		float threshold = .45f;
-		RaycastHit hit;
-		Vector3 offset = new Vector3(0,.4f,0);
-		if(Physics.Raycast((transform.position + offset), -Vector3.up, out hit, 100f))
-		{
-			distanceToGround = hit.distance;
-			if(distanceToGround < threshold)
-			{
-				isGrounded = true;
-				canJump = true;
-				startFall = false;
-				doublejumped = false;
-				canDoubleJump = false;
-				isFalling = false;
-				if(!isJumping) 
-				{
-					animator.SetInteger("Jumping", 0);
-				}
-			}
-			else
-			{
-				isGrounded = false;
-			}
-		}
-	}
+    #endregion
+    #region MiscMethods
+    //0 = No side
+    //1 = Left
+    //2 = Right
+    //3 = Dual
+    void Attack(int attackSide)
+    {
+        if (canAction)
+        {
+            if (weapon == Weapon.UNARMED)
+            {
+                int maxAttacks = 3;
+                int attackNumber = 0;
+                if (attackSide == 1 || attackSide == 3)
+                {
+                    attackNumber = Random.Range(3, maxAttacks);
+                }
+                else if (attackSide == 2)
+                {
+                    attackNumber = Random.Range(6, maxAttacks + 3);
+                }
+                if (isGrounded)
+                {
+                    if (attackSide != 3)
+                    {
+                        animator.SetTrigger("Attack" + (attackNumber).ToString() + "Trigger");
+                        if (leftWeapon == 12 || leftWeapon == 14 || rightWeapon == 13 || rightWeapon == 15)
+                        {
+                            StartCoroutine(_LockMovementAndAttack(0, .75f));
+                        }
+                        else
+                        {
+                            StartCoroutine(_LockMovementAndAttack(0, .6f));
+                        }
+                    }
+                    else
+                    {
+                        animator.SetTrigger("AttackDual" + (attackNumber).ToString() + "Trigger");
+                        StartCoroutine(_LockMovementAndAttack(0, .75f));
+                    }
+                }
+            }
+            //2 handed weapons
+            else
+            {
+                if (isGrounded)
+                {
+                    animator.SetTrigger("Attack" + (6).ToString() + "Trigger");
+                    StartCoroutine(_LockMovementAndAttack(0, .85f));
+                }
+            }
+        }
+    }
+    void AttackKick(int kickSide)
+    {
+        if (isGrounded)
+        {
+            if (kickSide == 1)
+            {
+                animator.SetTrigger("AttackKick1Trigger");
+            }
+            else
+            {
+                animator.SetTrigger("AttackKick2Trigger");
+            }
+            StartCoroutine(_LockMovementAndAttack(0, .8f));
+        }
+    }
+    //0 = No side
+    //1 = Left
+    //2 = Right
+    //3 = Dual
+    void CastAttack(int attackSide)
+    {
+        if (weapon == Weapon.UNARMED)
+        {
+            int maxAttacks = 3;
+            if (attackSide == 1)
+            {
+                int attackNumber = Random.Range(0, maxAttacks);
+                if (isGrounded)
+                {
+                    animator.SetTrigger("CastAttack" + (attackNumber + 1).ToString() + "Trigger");
+                    StartCoroutine(_LockMovementAndAttack(0, .8f));
+                }
+            }
+            if (attackSide == 2)
+            {
+                int attackNumber = Random.Range(3, maxAttacks + 3);
+                if (isGrounded)
+                {
+                    animator.SetTrigger("CastAttack" + (attackNumber + 1).ToString() + "Trigger");
+                    StartCoroutine(_LockMovementAndAttack(0, .8f));
+                }
+            }
+            if (attackSide == 3)
+            {
+                int attackNumber = Random.Range(0, maxAttacks);
+                if (isGrounded)
+                {
+                    animator.SetTrigger("CastDualAttack" + (attackNumber + 1).ToString() + "Trigger");
+                    StartCoroutine(_LockMovementAndAttack(0, 1f));
+                }
+            }
+        }
+    }
+    void GetHit()
+    {
+        int hits = 5;
+        int hitNumber = Random.Range(0, hits);
+        animator.SetTrigger("GetHit" + (hitNumber + 1).ToString() + "Trigger");
+        StartCoroutine(_LockMovementAndAttack(.1f, .4f));
+        //apply directional knockback force
+        if (hitNumber <= 1)
+        {
+            StartCoroutine(_Knockback(-transform.forward, 8, 4));
+        }
+        else if (hitNumber == 2)
+        {
+            StartCoroutine(_Knockback(transform.forward, 8, 4));
+        }
+        else if (hitNumber == 3)
+        {
+            StartCoroutine(_Knockback(transform.right, 8, 4));
+        }
+        else if (hitNumber == 4)
+        {
+            StartCoroutine(_Knockback(-transform.right, 8, 4));
+        }
+    }
 
-	void Jumping()
-	{
-		if(isGrounded)
-		{
-			if(canJump && Input.GetButtonDown("Jump"))
-			{
-				StartCoroutine(_Jump());
-			}
-		}
-		else
-		{    
-			canDoubleJump = true;
-			canJump = false;
-			if(isFalling)
-			{
-				//set the animation back to falling
-				animator.SetInteger("Jumping", 2);
-				//prevent from going into land animation while in air
-				if(!startFall)
-				{
-					animator.SetTrigger("JumpTrigger");
-					startFall = true;
-				}
-			}
-			if(canDoubleJump && doublejumping && Input.GetButtonDown("Jump") && !doublejumped && isFalling)
-			{
-				// Apply the current movement to launch velocity
-				rb.velocity += doublejumpSpeed * Vector3.up;
-				animator.SetInteger("Jumping", 3);
-				doublejumped = true;
-			}
-		}
-	}
+    IEnumerator _Knockback(Vector3 knockDirection, int knockBackAmount, int variableAmount)
+    {
+        isKnockback = true;
+        StartCoroutine(_KnockbackForce(knockDirection, knockBackAmount, variableAmount));
+        yield return new WaitForSeconds(.1f);
+        isKnockback = false;
+    }
 
-	IEnumerator _Jump()
-	{
-		isJumping = true;
-		animator.SetInteger("Jumping", 1);
-		animator.SetTrigger("JumpTrigger");
-		// Apply the current movement to launch velocity
-		rb.velocity += jumpSpeed * Vector3.up;
-		canJump = false;
-		yield return new WaitForSeconds(.5f);
-		isJumping = false;
-	}
+    IEnumerator _KnockbackForce(Vector3 knockDirection, int knockBackAmount, int variableAmount)
+    {
+        while (isKnockback)
+        {
+            rb.AddForce(knockDirection * ((knockBackAmount + Random.Range(-variableAmount, variableAmount)) * (knockbackMultiplier * 10)), ForceMode.Impulse);
+            yield return null;
+        }
+    }
 
-	void AirControl()
-	{
-		if(!isGrounded)
-		{
-			CameraRelativeMovement();
-			Vector3 motion = inputVec;
-			motion *= (Mathf.Abs(inputVec.x) == 1 && Mathf.Abs(inputVec.z) == 1) ? 0.7f:1;
-			rb.AddForce(motion * inAirSpeed, ForceMode.Acceleration);
-			//limit the amount of velocity we can achieve
-			float velocityX = 0;
-			float velocityZ = 0;
-			if(rb.velocity.x > maxVelocity)
-			{
-				velocityX = GetComponent<Rigidbody>().velocity.x - maxVelocity;
-				if(velocityX < 0)
-				{
-					velocityX = 0;
-				}
-				rb.AddForce(new Vector3(-velocityX, 0, 0), ForceMode.Acceleration);
-			}
-			if(rb.velocity.x < minVelocity)
-			{
-				velocityX = rb.velocity.x - minVelocity;
-				if(velocityX > 0)
-				{
-					velocityX = 0;
-				}
-				rb.AddForce(new Vector3(-velocityX, 0, 0), ForceMode.Acceleration);
-			}
-			if(rb.velocity.z > maxVelocity)
-			{
-				velocityZ = rb.velocity.z - maxVelocity;
-				if(velocityZ < 0)
-				{
-					velocityZ = 0;
-				}
-				rb.AddForce(new Vector3(0, 0, -velocityZ), ForceMode.Acceleration);
-			}
-			if(rb.velocity.z < minVelocity)
-			{
-				velocityZ = rb.velocity.z - minVelocity;
-				if(velocityZ > 0)
-				{
-					velocityZ = 0;
-				}
-				rb.AddForce(new Vector3(0, 0, -velocityZ), ForceMode.Acceleration);
-			}
-		}
-	}
+    IEnumerator _Death()
+    {
+        canAction = false;
+        animator.SetTrigger("Death1Trigger");
+        StartCoroutine(_LockMovementAndAttack(.1f, 1.5f));
+        isDead = true;
+        animator.SetBool("Moving", false);
+        inputVec = new Vector3(0, 0, 0);
+        yield return null;
+    }
 
-	#endregion
+    IEnumerator _Revive()
+    {
+        animator.SetTrigger("Revive1Trigger");
+        isDead = false;
+        yield return null;
+    }
 
-	#region MiscMethods
+    #endregion
 
-	//0 = No side
-	//1 = Left
-	//2 = Right
-	//3 = Dual
-	void Attack(int attackSide)
-	{
-		if(canAction)
-		{
-			if(weapon == Weapon.UNARMED)
-			{
-				int maxAttacks = 3;
-				int attackNumber = 0;
-				if(attackSide == 1 || attackSide == 3)
-				{
-					attackNumber = Random.Range(3, maxAttacks);
-				}
-				else if(attackSide == 2)
-				{
-					attackNumber = Random.Range(6, maxAttacks + 3);
-				}
-				if(isGrounded)
-				{
-					if(attackSide != 3)
-					{
-						animator.SetTrigger("Attack" + (attackNumber).ToString() + "Trigger");
-						if(leftWeapon == 12 || leftWeapon == 14 || rightWeapon == 13 || rightWeapon == 15)
-						{
-							StartCoroutine(_LockMovementAndAttack(0, .75f));
-						} 
-						else
-						{
-							StartCoroutine(_LockMovementAndAttack(0, .6f));
-						}
-					}
-					else
-					{
-						animator.SetTrigger("AttackDual" + (attackNumber).ToString() + "Trigger");
-						StartCoroutine(_LockMovementAndAttack(0, .75f));
-					}
-				}
-			}
-			//2 handed weapons
-			else
-			{
-				if(isGrounded)
-				{
-					animator.SetTrigger("Attack" + (6).ToString() + "Trigger");
-					StartCoroutine(_LockMovementAndAttack(0, .85f));
-				}
-			}
-		}
-	}
+    #region Rolling
 
-	void AttackKick(int kickSide)
-	{
-		if(isGrounded)
-		{
-			if(kickSide == 1)
-			{
-				animator.SetTrigger("AttackKick1Trigger");
-			}
-			else
-			{
-				animator.SetTrigger("AttackKick2Trigger");
-			}
-			StartCoroutine(_LockMovementAndAttack(0, .8f));
-		}
-	}
+    void Rolling()
+    {
+        if (!isRolling && isGrounded)
+        {
+            if (Input.GetAxisRaw("leftTrigger") != 0)
+            {
+               // transform.forward = sceneCamera.transform.forward;                     
+                canMove = false;//Player controller
+                animator.SetBool("Moving", false); //third person character
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                inputVec = new Vector3(0, 0, 0);
+                animator.applyRootMotion = true;        
+             
+                if (Input.GetAxis("leftJoystickVertical") > .95f || Input.GetAxis("leftJoystickVertical") < -.95f || Input.GetAxis("leftJoystickHorizontal") > .95f || Input.GetAxis("leftJoystickHorizontal") < -.95f)
+                {
+                    StartCoroutine(_DirectionalRoll(Input.GetAxis("leftJoystickHorizontal"), Input.GetAxis("leftJoystickVertical")));
+                }
+            }
+            canMove = true;
+            animator.applyRootMotion = false;
+            //float inputDashVertical = Input.GetAxisRaw("leftJoystickVertical");
+            //float inputDashHorizontal = Input.GetAxisRaw("leftJoystickHorizontal");
+            //float inputHorizontal = Input.GetAxisRaw("leftJoystickHorizontal");
+            //float inputVertical = Input.GetAxisRaw("leftJoystickVertical");
+        }
+    }
 
-	//0 = No side
-	//1 = Left
-	//2 = Right
-	//3 = Dual
-	void CastAttack(int attackSide)
-	{
-		if(weapon == Weapon.UNARMED)
-		{
-			int maxAttacks = 3;
-			if(attackSide == 1)
-			{
-				int attackNumber = Random.Range(0, maxAttacks);
-				if(isGrounded)
-				{
-					animator.SetTrigger("CastAttack" + (attackNumber + 1).ToString() + "Trigger");
-					StartCoroutine(_LockMovementAndAttack(0, .8f));
-				}
-			}
-			if(attackSide == 2)
-			{
-				int attackNumber = Random.Range(3, maxAttacks + 3);
-				if(isGrounded)
-				{
-					animator.SetTrigger("CastAttack" + (attackNumber + 1).ToString() + "Trigger");
-					StartCoroutine(_LockMovementAndAttack(0, .8f));
-				}
-			}
-			if(attackSide == 3)
-			{
-				int attackNumber = Random.Range(0, maxAttacks);
-				if(isGrounded)
-				{
-					animator.SetTrigger("CastDualAttack" + (attackNumber + 1).ToString() + "Trigger");
-					StartCoroutine(_LockMovementAndAttack(0, 1f));
-				}
-			}
-		} 
-	}
-
-	void GetHit()
-	{
-		int hits = 5;
-		int hitNumber = Random.Range(0, hits);
-		animator.SetTrigger("GetHit" + (hitNumber + 1).ToString()+ "Trigger");
-		StartCoroutine(_LockMovementAndAttack(.1f, .4f));
-		//apply directional knockback force
-		if(hitNumber <= 1)
-		{
-			StartCoroutine(_Knockback(-transform.forward, 8, 4));
-		} 
-		else if(hitNumber == 2)
-		{
-			StartCoroutine(_Knockback(transform.forward, 8, 4));
-		}
-		else if(hitNumber == 3)
-		{
-			StartCoroutine(_Knockback(transform.right, 8, 4));
-		}
-		else if(hitNumber == 4)
-		{
-			StartCoroutine(_Knockback(-transform.right, 8, 4));
-		}
-	}
-
-	IEnumerator _Knockback(Vector3 knockDirection, int knockBackAmount, int variableAmount)
-	{
-		isKnockback = true;
-		StartCoroutine(_KnockbackForce(knockDirection, knockBackAmount, variableAmount));
-		yield return new WaitForSeconds(.1f);
-		isKnockback = false;
-	}
-
-	IEnumerator _KnockbackForce(Vector3 knockDirection, int knockBackAmount, int variableAmount)
-	{
-		while(isKnockback)
-		{
-			rb.AddForce(knockDirection * ((knockBackAmount + Random.Range(-variableAmount, variableAmount)) * (knockbackMultiplier * 10)), ForceMode.Impulse);
-			yield return null;
-		}
-	}
-
-	IEnumerator _Death()
-	{
-		animator.SetTrigger("Death1Trigger");
-		StartCoroutine(_LockMovementAndAttack(.1f, 1.5f));
-		isDead = true;
-		animator.SetBool("Moving", false);
-		inputVec = new Vector3(0, 0, 0);
-		yield return null;
-	}
-
-	IEnumerator _Revive()
-	{
-		animator.SetTrigger("Revive1Trigger");
-		isDead = false;
-		yield return null;
-	}
-
-	#endregion
-
-	#region Rolling
-
-	void Rolling()
-	{
-		if(!isRolling && isGrounded)
-		{
-			if(Input.GetAxis("DashVertical") > .5 || Input.GetAxis("DashVertical") < -.5 || Input.GetAxis("DashHorizontal") > .5 || Input.GetAxis("DashHorizontal") < -.5)
-			{
-				StartCoroutine(_DirectionalRoll(Input.GetAxis("DashVertical"), Input.GetAxis("DashHorizontal")));
-			}
-		}
-	}
-
-	public IEnumerator _DirectionalRoll(float x, float v)
-	{
-		//check which way the dash is pressed relative to the character facing
-		float angle = Vector3.Angle(targetDashDirection,-transform.forward);
-		float sign = Mathf.Sign(Vector3.Dot(transform.up,Vector3.Cross(targetDashDirection,transform.forward)));
-		// angle in [-179,180]
-		float signed_angle = angle * sign;
-		//angle in 0-360
-		float angle360 = (signed_angle + 180) % 360;
-		//deternime the animation to play based on the angle
-		if(angle360 > 315 || angle360 < 45)
+    public IEnumerator _DirectionalRoll(float x, float v)
+    {
+        //check which way the dash is pressed relative to the character facing
+        float angle = Vector3.Angle(targetDashDirection, -transform.forward);
+        float sign = Mathf.Sign(Vector3.Dot(transform.up, Vector3.Cross(targetDashDirection, transform.forward)));
+        // angle in [-179,180]
+        float signed_angle = angle * sign;
+        //angle in 0-360
+        float angle360 = (signed_angle + 180) % 360;
+        //deternime the animation to play based on the angle
+        if (angle360 > 315 || angle360 < 45)
 		{
 			StartCoroutine(_Roll(1));
 		}

@@ -6,11 +6,14 @@ public class BaseRogueClass : BaseCharacterClass
 
     // Use this for initialization
     int initialLevel = 5;
+
+    JobTypeCategory jobType;
+
     public BaseRogueClass()
     {
         CharacterClassName = "Rogue";
+        jobType = JobTypeCategory.Rogue;
         CharacterClassDescription = "A fast and nimble rogue class!";
-
 
         Strength = 5;
         Agility = 9;

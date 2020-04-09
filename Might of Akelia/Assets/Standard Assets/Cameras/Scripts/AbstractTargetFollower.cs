@@ -11,7 +11,8 @@ namespace UnitySampleAssets.Cameras
         }
 
         [SerializeField] protected Transform target; // The target object to follow
-        [SerializeField] private bool autoTargetPlayer = true; // Whether the rig should automatically target the player.
+        [SerializeField] private bool autoTargetPlayer = true;// Whether the rig should automatically target the player.
+        [SerializeField] private bool autoTargetEnemy = true; // Whether the rig should automatically target the Enemy.
         [SerializeField] private UpdateType updateType; // stores the selected update type
 
 
@@ -24,6 +25,7 @@ namespace UnitySampleAssets.Cameras
                 FindAndTargetPlayer();
             }
 
+
         }
 
         private void FixedUpdate()
@@ -34,6 +36,11 @@ namespace UnitySampleAssets.Cameras
             if (autoTargetPlayer && (target == null || !target.gameObject.activeSelf))
             {
                 FindAndTargetPlayer();
+            }
+            if(autoTargetEnemy)
+            {
+                FindAndTargetObject();
+              
             }
             if (updateType == UpdateType.FixedUpdate)
             {
@@ -62,15 +69,32 @@ namespace UnitySampleAssets.Cameras
 
         public void FindAndTargetPlayer()
         {
-	        // auto target an object tagged player, if no target has been assigned
+            // auto target an object tagged player, if no target has been assigned
+            autoTargetPlayer = true;
+            autoTargetEnemy = false;
 	        var targetObj = GameObject.FindGameObjectWithTag("Player");
 	        if (targetObj)
 	        {
-	            SetTarget(targetObj.transform);
-	        }
+	            SetTarget(targetObj.transform);              
+	        }         
         }
-
-
+        public void FindAndTargetObject()
+        {
+            autoTargetPlayer = false;
+            autoTargetEnemy = true;
+            var playerObj = GameObject.FindGameObjectWithTag("Player");
+            // auto target an object tagged Enemy, if no target has been assigned  
+            var enemyObj = GameObject.FindGameObjectWithTag("Enemy");
+           // float offSetDistance = 5f;
+          //  Vector3 targetDistance = new Vector3(enemyObj.transform.position.x - playerObj.transform.position.x, enemyObj.transform.position.y - playerObj.transform.position.y, enemyObj.transform.position.z - playerObj.transform.position.z);
+      
+            if (enemyObj)
+            {
+                //GameObject enemyTarget = enemyObj;
+               // enemyTarget.transform.position -= targetDistance;
+                SetTarget(enemyObj.transform); //enemyObj.transform
+            }
+        }
         public virtual void SetTarget(Transform newTransform)
         {
             target = newTransform;

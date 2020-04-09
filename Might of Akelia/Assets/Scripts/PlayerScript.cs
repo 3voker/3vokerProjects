@@ -43,27 +43,27 @@ public class PlayerScript : MonoBehaviour {
 
         spell = cureSpellStructArray[0].Spell;
 
-        try
-        {
-           spell = spellManagerArray[0].Spell;
-        }
-        catch (System.NullReferenceException)
-        {
-            Debug.Log("Null Reference");
-        }
+        //try
+        //{
+        //   spell = spellManagerArray[0].Spell;
+        //}
+        //catch (System.NullReferenceException)
+        //{
+        //    Debug.Log("Null Reference");
+        //}
 
         spellManagerArray[0] = new SpellManager();
 
         // It's now ok
-        spell = spellManagerArray[0].Spell;
+        //spell = spellManagerArray[0].Spell;
 
         var spell1 = cureSpellStructArray[0];
         var spell2 = spellManagerArray[0];
 
         spell1.Spell = 1;
-        spell2.Spell = 1;
+        //spell2.Spell = 1;
 
-        Assert.IsTrue(spell2.Spell == 1);
+        //Assert.IsTrue(spell2.Spell == 1);
         Assert.IsFalse(cureSpellStructArray[0].Spell == 1);
 
        cureSpellStructArray[0].Spell = 1;

@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BaseWarriorClass : BaseCharacterClass {
+public class BaseWarriorClass : BaseCharacterClass
+{
 
     // Use this for initialization
 
@@ -10,7 +11,6 @@ public class BaseWarriorClass : BaseCharacterClass {
     {
         CharacterClassName = "Warrior";
         CharacterClassDescription = "A strong and powerful weapon master!";
-
 
         Strength = 10;
         Agility = 6;

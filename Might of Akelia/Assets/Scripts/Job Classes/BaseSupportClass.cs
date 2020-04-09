@@ -6,9 +6,12 @@ public class BaseSupportClass : BaseCharacterClass
 
     // Use this for initialization
     int initialLevel = 5;
+    JobTypeCategory jobType;
+
     public BaseSupportClass()
     {
         CharacterClassName = "Support";
+        jobType = JobTypeCategory.Support;        
         CharacterClassDescription = "A wise and spiritual support class!";
 
 

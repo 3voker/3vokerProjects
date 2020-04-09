@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnitySampleAssets.Utility;
+using UnityStandardAssets.Utility;
 
 namespace UnitySampleAssets.Effects
 {

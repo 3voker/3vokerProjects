@@ -1,4 +1,4 @@
-﻿using UnitySampleAssets.CrossPlatformInput;
+﻿using UnityStandardAssets.CrossPlatformInput;
 using UnityEngine;
 
 namespace UnitySampleAssets.Vehicles.Aeroplane
